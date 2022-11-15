@@ -1,7 +1,13 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  const changeTitle = () => {
+    window.electronAPI.setTitle('最艰难的道路')
+  }
+</script>
 
 <template>
-  <div> </div>
+  <div>
+    <a-button @click="changeTitle">change title</a-button>
+  </div>
 </template>
 
 <style scoped>
