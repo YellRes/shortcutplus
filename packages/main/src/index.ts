@@ -1,6 +1,6 @@
 // packages/main/src/index.ts
 import { join } from 'node:path'
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 
 const isSingleInstance = app.requestSingleInstanceLock()
 
@@ -18,8 +18,14 @@ async function createWindow() {
       webviewTag: false,
       // Electron current directory will be at `dist/main`, we need to include
       // the preload script from this relative path: `../preload/index.cjs`.
-      preload: join(__dirname, '../preload/index.cjs'),
-    },
+      preload: join(__dirname, '../preload/index.cjs')
+    }
+  })
+
+  ipcMain.on('set-title', (event, title) => {
+    const webContents = event.sender
+    const win = BrowserWindow.fromWebContents(webContents)
+    win.setTitle(title)
   })
 
   // If you install `show: true` then it can cause issues when trying to close the window.
