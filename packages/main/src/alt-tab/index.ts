@@ -1,5 +1,11 @@
 import { ipcMain } from 'electron'
+import { getAltTabTask } from './system'
+
+async function handleAltTabTaskGet() {
+  const altTabTaskList = await getAltTabTask()
+  return altTabTaskList
+}
 
 export const initIPC = () => {
-  ipcMain.on('get-all-running-processes', (event) => {})
+  ipcMain.handle('get-altTab-task', handleAltTabTaskGet)
 }
