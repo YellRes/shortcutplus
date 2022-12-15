@@ -8,18 +8,18 @@
   const allTabs = shallowRef<Array<AppTabItem>>([])
 
   const getAllTabs = async () => {
-    // allTabs.value = await window.api.getAllAltTabTask()
-    allTabs.value = [
-      {
-        appTitle: 'microsoft-vsCode'
-      },
-      {
-        appTitle: 'chrome-你不知道的JavaScript'
-      },
-      {
-        appTitle: 'trash'
-      }
-    ]
+    allTabs.value = await window.api.getAllAltTabTask()
+    // allTabs.value = [
+    //   {
+    //     appTitle: 'microsoft-vsCode'
+    //   },
+    //   {
+    //     appTitle: 'chrome-你不知道的JavaScript'
+    //   },
+    //   {
+    //     appTitle: 'trash'
+    //   }
+    // ]
   }
 
   getAllTabs()

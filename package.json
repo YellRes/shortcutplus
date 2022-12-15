@@ -16,11 +16,15 @@
   },
   "dependencies": {
     "ant-design-vue": "^3.2.15",
+    "ffi-napi": "^4.0.3",
+    "ref-napi": "^3.0.3",
     "vue": "^3.2.41",
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
+    "@types/ffi-napi": "^4.0.7",
+    "@types/ref-napi": "^3.0.6",
     "@vitejs/plugin-vue": "^3.2.0",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^11.0.0",
