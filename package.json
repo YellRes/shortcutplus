@@ -6,7 +6,7 @@
   "main": "dist/main/index.cjs",
   "scripts": {
     "preview": "vite preview",
-    "dev:renderer": "vite packages/renderer",
+    "dev:renderer": "vite serve packages/renderer",
     "build:renderer": "vue-tsc -p packages/renderer/tsconfig.json --noEmit && vite build packages/renderer",
     "build:preload": "tsc -p packages/preload/tsconfig.json --noEmit && vite build packages/preload",
     "build:main": "tsc -p packages/main/tsconfig.json --noEmit && vite build packages/main",
@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "ant-design-vue": "^3.2.15",
-    "vue": "^3.2.41"
+    "vue": "^3.2.41",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",

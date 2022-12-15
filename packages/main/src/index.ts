@@ -1,6 +1,7 @@
 // packages/main/src/index.ts
 import { join } from 'node:path'
 import { app, BrowserWindow, ipcMain } from 'electron'
+import { initIPC } from './alt-tab/index'
 
 const isSingleInstance = app.requestSingleInstanceLock()
 
@@ -22,11 +23,13 @@ async function createWindow() {
     }
   })
 
-  ipcMain.on('set-title', (event, title) => {
-    const webContents = event.sender
-    const win = BrowserWindow.fromWebContents(webContents)
-    win.setTitle(title)
-  })
+  initIPC()
+
+  // ipcMain.on('set-title', (event, title) => {
+  //   const webContents = event.sender
+  //   const win = BrowserWindow.fromWebContents(webContents)
+  //   win.setTitle(title)
+  // })
 
   // If you install `show: true` then it can cause issues when trying to close the window.
   // Use `show: false` and listener events `ready-to-show` to fix these issues.
