@@ -17,6 +17,7 @@
   "dependencies": {
     "ant-design-vue": "^3.2.15",
     "ffi-napi": "^4.0.3",
+    "iconv-lite": "^0.6.3",
     "ref-napi": "^3.0.3",
     "vue": "^3.2.41",
     "vue-router": "^4.1.6"
