@@ -12,6 +12,7 @@ const {
   GetLastActivePopup,
   IsWindowVisible,
   GetWindowTextA,
+  GetWindowTextLengthA,
   GetWindowThreadProcessId
 } = libUser32Api
 const { OpenProcess } = libProcessThreadsApi
@@ -75,22 +76,28 @@ const isAltTabWindows = (hwnd: number) => {
 
   return true
 }
+
+const allAltTabProcess: Array<string> = []
 const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number) => {
   const res = isAltTabWindows(hwnd)
   if (res) {
-    const buf = Buffer.alloc(100000)
+    const length: number = GetWindowTextLengthA(hwnd)
+    const buf = Buffer.alloc(length)
     buf.type = ref.types.uchar
-    GetWindowTextA(hwnd, buf, 1000000)
+    GetWindowTextA(hwnd, buf, length + 1)
     const finalStr = iconv.decode(buf, 'gbk')
-    console.log(finalStr, 'finalStrfinalStrfinalStr')
-
-    const processIdBuf = Buffer.alloc(1000)
-    processIdBuf.type = ref.types.uint16
-    GetWindowThreadProcessId(hwnd, processIdBuf)
-
+    allAltTabProcess.push(finalStr)
+    // const processIdBuf = Buffer.alloc(1000)
+    // processIdBuf.type = ref.types.uint16
+    // GetWindowThreadProcessId(hwnd, processIdBuf)
     // 获取hwnd的进程名字
-    getProcessNameByHwnd(processIdBuf)
+    // getProcessNameByHwnd(processIdBuf)
   }
 })
+const getAllInfo = () => {
+  EnumWindows(enumWindowsCallBack, 0)
 
-EnumWindows(enumWindowsCallBack, 0)
+  return { allAltTabProcess }
+}
+
+export { getAllInfo }

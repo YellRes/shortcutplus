@@ -18,20 +18,22 @@ export default defineConfig({
       // Define the entry-point.
       entry: './src/index.ts',
       // Define the build format, Electron support CJS.
-      formats: ['cjs'],
+      formats: ['cjs']
     },
 
     rollupOptions: {
       external: [
         // Once again exclude Electron from build output.
         'electron',
+        'ffi-napi',
+        'ref-napi',
         // Exclude Node builtin modules.
-        ...builtinModules.flatMap((p) => [p, `node:${p}`]),
+        ...builtinModules.flatMap((p) => [p, `node:${p}`])
       ],
       output: {
         // Will be named `index.cjs`.
-        entryFileNames: '[name].cjs',
-      },
-    },
-  },
+        entryFileNames: '[name].cjs'
+      }
+    }
+  }
 })
