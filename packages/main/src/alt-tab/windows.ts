@@ -77,7 +77,7 @@ const isAltTabWindows = (hwnd: number) => {
   return true
 }
 
-const allAltTabProcess: Array<string> = []
+let allAltTabProcess: Array<string> = []
 const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number) => {
   const res = isAltTabWindows(hwnd)
   if (res) {
@@ -95,6 +95,7 @@ const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number
   }
 })
 const getAllInfo = () => {
+  allAltTabProcess = []
   EnumWindows(enumWindowsCallBack, 0)
 
   return { allAltTabProcess }
