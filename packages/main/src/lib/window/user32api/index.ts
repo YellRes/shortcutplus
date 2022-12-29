@@ -8,7 +8,7 @@ import ffi from 'ffi-napi'
 import { windowType } from '../index'
 
 const { Def, BOOL, POINTER, LONG_PTR, HANDLE } = windowType
-const libUser32 = ffi.Library('user32', {
+const libUser32 = new ffi.Library('user32.dll', {
   EnumWindows: [BOOL, [POINTER, LONG_PTR]],
   GetShellWindow: [POINTER, []],
   GetWindowLong: [HANDLE, [HANDLE, Def.int]],

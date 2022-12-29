@@ -3,7 +3,7 @@ import { windowType } from '../index'
 
 const { Def, HANDLE } = windowType
 
-const libProcessThreadApi = ffi.Library('kernel32', {
+const libProcessThreadApi = new ffi.Library('kernel32.dll', {
   OpenProcess: [HANDLE, [HANDLE, Def.int, HANDLE]]
 })
 
