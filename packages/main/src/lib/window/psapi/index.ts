@@ -3,7 +3,7 @@ import { windowType } from '../index'
 
 const { Def, HANDLE } = windowType
 
-const libPsApi = ffi.Library('psapi', {
+const libPsApi = new ffi.Library('psapi.dll', {
   GetModuleFileNameExA: [HANDLE, [HANDLE, HANDLE, Def.charPtr, HANDLE]]
 })
 
