@@ -8,7 +8,7 @@ import { spawn } from 'child_process'
 // Shared config across multiple build watchers.
 const sharedConfig: InlineConfig = {
   mode: 'development',
-  build: { watch: {} },
+  build: { watch: {} }
 }
 
 /**
@@ -19,7 +19,7 @@ const getWatcher = (name: string, configFilePath: string, writeBundle: any) =>
   build({
     ...sharedConfig,
     configFile: configFilePath,
-    plugins: [{ name, writeBundle }],
+    plugins: [{ name, writeBundle }]
   })
 
 /**
@@ -45,16 +45,25 @@ const setupMainWatcher = async () => {
       spawnProcess = null
     }
 
+    console.log(electronPath, 'electronPathelectronPath')
     // Restart Electron process when main package is edited and recompiled.
     spawnProcess = spawn(String(electronPath), ['.'])
+
+    spawnProcess.stderr.on('data', (data: any) => {
+      console.log(data)
+    })
+
+    spawnProcess.on('close', (data: any) => {
+      console.log(data, 'electron close')
+    })
   })
 }
 
-(async () => {
+;(async () => {
   try {
     const rendererServer = await createServer({
       ...sharedConfig,
-      configFile: 'packages/renderer/vite.config.ts',
+      configFile: 'packages/renderer/vite.config.ts'
     })
 
     await rendererServer.listen()

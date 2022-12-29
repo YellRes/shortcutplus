@@ -34,6 +34,13 @@ export default defineConfig({
         // Will be named `index.cjs`.
         entryFileNames: '[name].cjs'
       }
+    },
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+        drop_debugger: false
+      }
     }
   }
 })
