@@ -5,9 +5,10 @@ import { getAllInfo, toggleWindow } from './windows'
 // 降低 electron 版本
 
 // Q-A: : Dynamic Symbol Retrieval Error Win32 error 127
-// A: user32 中数字错误
+// A: user32 中函数名称导入错误
 export const getAltTabTask = () => {
   const { allAltTabProcess } = getAllInfo()
+  console.log(allAltTabProcess, 'allAltTabProcess')
   return allAltTabProcess
 }
 
