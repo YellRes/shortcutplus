@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { ref, shallowRef } from 'vue'
   import { AppTabItem } from './type'
+  import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
 
   const inputVal = ref<string>('')
   const filterCurrentTabs = () => {}
@@ -9,20 +10,13 @@
 
   const getAllTabs = async () => {
     allTabs.value = await window.api.getAllAltTabTask()
-    // allTabs.value = [
-    //   {
-    //     appTitle: 'microsoft-vsCode'
-    //   },
-    //   {
-    //     appTitle: 'chrome-你不知道的JavaScript'
-    //   },
-    //   {
-    //     appTitle: 'trash'
-    //   }
-    // ]
   }
 
   getAllTabs()
+
+  const toggleThisWindows = (item: WindowAltTabTaskItem) => {
+    window.api.toggleThisWindows(item.appHwnd)
+  }
 </script>
 
 <template>
@@ -43,7 +37,7 @@
             </template>
           </a-list-item-meta> -->
 
-          <a-list-item>{{ item.appTitle }}</a-list-item>
+          <a-list-item @click="() => toggleThisWindows(item)">{{ item.appTitle }}</a-list-item>
         </template>
       </a-list>
     </div>
