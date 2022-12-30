@@ -6,7 +6,8 @@ import { contextBridge, shell, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('api', {
   // Open an URL into the default web-browser.
   openUrl: (url: string) => shell.openExternal(url),
-  getAllAltTabTask: () => ipcRenderer.invoke('get-altTab-task')
+  getAllAltTabTask: () => ipcRenderer.invoke('get-altTab-task'),
+  toggleThisWindows: (appHwnd: number) => ipcRenderer.send('toggle-this-windows', appHwnd)
 })
 
 contextBridge.exposeInMainWorld('electronAPI', {

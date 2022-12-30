@@ -1,6 +1,8 @@
-import { libDwmApi, libUser32Api, libProcessThreadsApi, libPsApi, windowType } from '../lib/window'
+import { libDwmApi, libUser32Api, libProcessThreadsApi, windowType } from '../lib/window'
 import ref from 'ref-napi'
 import iconv from 'iconv-lite'
+import ffi from 'ffi-napi'
+import { WindowAltTabTaskItem } from './type'
 
 const { Def, BOOL, HANDLE, LONG_PTR } = windowType
 const { DwmGetWindowAttribute } = libDwmApi
@@ -13,10 +15,11 @@ const {
   IsWindowVisible,
   GetWindowTextA,
   GetWindowTextLengthA,
-  GetWindowThreadProcessId
+  GetWindowThreadProcessId,
+  SetForegroundWindow
 } = libUser32Api
 const { OpenProcess } = libProcessThreadsApi
-const { GetModuleFileNameExA, GetModuleFileNameExW } = libPsapi
+// const { GetModuleFileNameExA, GetModuleFileNameExW } = libPsapi
 
 const _WIN64 = process.arch === 'x64'
 
@@ -77,7 +80,7 @@ const isAltTabWindows = (hwnd: number) => {
   return true
 }
 
-let allAltTabProcess: Array<string> = []
+let allAltTabProcess: Array<WindowAltTabTaskItem> = []
 const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number) => {
   const res = isAltTabWindows(hwnd)
   if (res) {
@@ -86,13 +89,22 @@ const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number
     buf.type = ref.types.uchar
     GetWindowTextA(hwnd, buf, length + 1)
     const finalStr = iconv.decode(buf, 'gbk')
-    allAltTabProcess.push(finalStr)
+
+    // Q-A:  finalStr 字符串异常
+    // A:
+    if (finalStr)
+      allAltTabProcess.push({
+        appTitle: finalStr,
+        appHwnd: hwnd
+      })
     // const processIdBuf = Buffer.alloc(1000)
     // processIdBuf.type = ref.types.uint16
     // GetWindowThreadProcessId(hwnd, processIdBuf)
     // 获取hwnd的进程名字
     // getProcessNameByHwnd(processIdBuf)
   }
+
+  return true
 })
 const getAllInfo = () => {
   allAltTabProcess = []
@@ -101,4 +113,8 @@ const getAllInfo = () => {
   return { allAltTabProcess }
 }
 
-export { getAllInfo }
+const toggleWindow = (appHwnd: number) => {
+  SetForegroundWindow(appHwnd)
+}
+
+export { getAllInfo, toggleWindow }

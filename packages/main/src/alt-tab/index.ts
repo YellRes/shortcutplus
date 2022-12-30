@@ -1,11 +1,16 @@
 import { ipcMain } from 'electron'
-import { getAltTabTask } from './system'
+import { getAltTabTask, toggleThisWindows } from './system'
 
 async function handleAltTabTaskGet() {
-  const altTabTaskList = await getAltTabTask()
+  const altTabTaskList = getAltTabTask()
+
   return altTabTaskList
 }
 
 export const initIPC = () => {
   ipcMain.handle('get-altTab-task', handleAltTabTaskGet)
+
+  ipcMain.on('toggle-this-windows', (event, apphwnd) => {
+    toggleThisWindows(apphwnd)
+  })
 }
