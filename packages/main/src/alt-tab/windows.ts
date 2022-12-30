@@ -15,9 +15,13 @@ const {
   IsWindowVisible,
   GetWindowTextA,
   GetWindowTextLengthA,
-  GetWindowThreadProcessId,
-  SetForegroundWindow
+  GetWindowThreadProcessId
 } = libUser32Api
+
+// Q-A: SetForegroundWindow 放到 libUser32Api 导入后 会出现中文乱码情况
+const { SetForegroundWindow } = ffi.Library('user32', {
+  SetForegroundWindow: [BOOL, [HANDLE]]
+})
 const { OpenProcess } = libProcessThreadsApi
 // const { GetModuleFileNameExA, GetModuleFileNameExW } = libPsapi
 
@@ -81,14 +85,16 @@ const isAltTabWindows = (hwnd: number) => {
 }
 
 let allAltTabProcess: Array<WindowAltTabTaskItem> = []
-const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number) => {
+const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number, IParam) => {
   const res = isAltTabWindows(hwnd)
   if (res) {
     const length: number = GetWindowTextLengthA(hwnd)
+
     const buf = Buffer.alloc(length)
     buf.type = ref.types.uchar
     GetWindowTextA(hwnd, buf, length + 1)
-    const finalStr = iconv.decode(buf, 'gbk')
+
+    const finalStr = iconv.decode(buf, 'GBK')
 
     // Q-A:  finalStr 字符串异常
     // A:

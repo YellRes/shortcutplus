@@ -7,7 +7,7 @@ import ffi from 'ffi-napi'
 import { windowType } from '../index'
 
 const { Def, BOOL, POINTER, LONG_PTR, HANDLE } = windowType
-const libUser32 = new ffi.Library('user32', {
+const libUser32 = ffi.Library('user32', {
   EnumWindows: [BOOL, [POINTER, LONG_PTR]],
   GetShellWindow: [POINTER, []],
   GetWindowLongA: [HANDLE, [HANDLE, Def.int]],
@@ -16,8 +16,7 @@ const libUser32 = new ffi.Library('user32', {
   IsWindowVisible: [BOOL, [HANDLE]],
   GetWindowThreadProcessId: [Def.int, [HANDLE, Def.uint16Ptr]],
   GetWindowTextA: [Def.int, [HANDLE, Def.uint16Ptr, Def.int]],
-  GetWindowTextLengthA: [Def.int, [Def.int]],
-  SetForegroundWindow: [BOOL, [HANDLE]]
+  GetWindowTextLengthA: [Def.int, [Def.int]]
 })
 
 export default libUser32
