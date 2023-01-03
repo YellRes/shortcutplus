@@ -3,3 +3,7 @@ export interface WindowAltTabTaskItem {
   appIcon?: string
   appTitle: string
 }
+
+export interface WindowAltTabTask {
+  processName: string
+}

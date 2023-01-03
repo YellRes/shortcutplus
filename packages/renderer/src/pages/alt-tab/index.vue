@@ -1,17 +1,30 @@
 <script setup lang="ts">
-  import { ref, shallowRef } from 'vue'
+  import { ref, shallowRef, computed } from 'vue'
   import { AppTabItem } from './type'
   import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
 
   const inputVal = ref<string>('')
   const filterCurrentTabs = () => {}
-
   const allTabs = shallowRef<Array<AppTabItem>>([])
+  const altTabObj = shallowRef<Record<string, Array<WindowAltTabTaskItem>>>({})
 
   const getAllTabs = async () => {
-    allTabs.value = await window.api.getAllAltTabTask()
+    let { altTabObj: altTabData, allAltTabProcess } = await window.api.getAllAltTabTask()
+    allTabs.value = allAltTabProcess
+    altTabObj.value = altTabData
   }
 
+  const _altTabObj = computed(() => {
+    return Object.keys(altTabObj.value).reduce((pre, cur) => {
+      if (altTabObj.value[cur].length) {
+        const altTabItem = altTabObj.value[cur][0]
+        // Q-A: 字符串中有 - 就获取 - 后面的数据 没有就获取整个字段 提供正则
+        altTabItem.appTitle.match(/((?<=-\s*).*$)|(^((?!-).)*$)/g)
+      }
+
+      return pre
+    }, {})
+  })
   getAllTabs()
 
   const toggleThisWindows = (item: WindowAltTabTaskItem) => {
@@ -20,6 +33,7 @@
 </script>
 
 <template>
+  {{ altTabObj }}
   <div class="alt-tab-container">
     <div class="alt-tab-container__left">
       <a-input-search

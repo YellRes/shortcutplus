@@ -1,4 +1,4 @@
-import { libDwmApi, libUser32Api, libProcessThreadsApi, windowType } from '../lib/window'
+import { libDwmApi, libUser32Api, libProcessThreadsApi, windowType, libPsApi } from '../lib/window'
 import ref from 'ref-napi'
 import iconv from 'iconv-lite'
 import ffi from 'ffi-napi'
@@ -23,7 +23,7 @@ const { SetForegroundWindow } = ffi.Library('user32', {
   SetForegroundWindow: [BOOL, [HANDLE]]
 })
 const { OpenProcess } = libProcessThreadsApi
-// const { GetModuleFileNameExA, GetModuleFileNameExW } = libPsapi
+const { GetModuleFileNameExA } = libPsApi
 
 const _WIN64 = process.arch === 'x64'
 
@@ -84,7 +84,23 @@ const isAltTabWindows = (hwnd: number) => {
   return true
 }
 
+const getProcessNameByHwnd = (pid: number, altTabItemInfo: WindowAltTabTaskItem) => {
+  const processHandle = OpenProcess(0x0400 | 0x0010, 0, pid)
+
+  const processNameBuf = Buffer.alloc(1000)
+  processNameBuf.type = ref.types.uchar
+  GetModuleFileNameExA(processHandle, 0, processNameBuf, 1000)
+  const processName = iconv.decode(processNameBuf, 'gbk').replace(/(\x00)*/gm, '')
+
+  if (!altTabObj[processName]) {
+    altTabObj[processName] = []
+  }
+
+  if (altTabItemInfo.appTitle) altTabObj[processName].push(altTabItemInfo)
+}
+
 let allAltTabProcess: Array<WindowAltTabTaskItem> = []
+let altTabObj: Record<string, Array<WindowAltTabTaskItem>> = {}
 const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number, IParam) => {
   const res = isAltTabWindows(hwnd)
   if (res) {
@@ -95,28 +111,29 @@ const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number
     GetWindowTextA(hwnd, buf, length + 1)
 
     const finalStr = iconv.decode(buf, 'GBK')
-
+    const altTabItemInfo = {
+      appTitle: finalStr,
+      appHwnd: hwnd
+    }
     // Q-A:  finalStr 字符串异常
-    // A:
-    if (finalStr)
-      allAltTabProcess.push({
-        appTitle: finalStr,
-        appHwnd: hwnd
-      })
-    // const processIdBuf = Buffer.alloc(1000)
-    // processIdBuf.type = ref.types.uint16
-    // GetWindowThreadProcessId(hwnd, processIdBuf)
+    // A: user32 导入函数的问题
+    if (finalStr) allAltTabProcess.push(altTabItemInfo)
+
+    const processIdBuf = Buffer.alloc(1000)
+    processIdBuf.type = ref.types.uint16
+    GetWindowThreadProcessId(hwnd, processIdBuf)
     // 获取hwnd的进程名字
-    // getProcessNameByHwnd(processIdBuf)
+    getProcessNameByHwnd(processIdBuf.deref(), altTabItemInfo)
   }
 
   return true
 })
 const getAllInfo = () => {
   allAltTabProcess = []
+  altTabObj = {}
   EnumWindows(enumWindowsCallBack, 0)
 
-  return { allAltTabProcess }
+  return { allAltTabProcess, altTabObj }
 }
 
 const toggleWindow = (appHwnd: number) => {
