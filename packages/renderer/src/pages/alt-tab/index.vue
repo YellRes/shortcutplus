@@ -19,11 +19,15 @@
       if (altTabObj.value[cur].length) {
         const altTabItem = altTabObj.value[cur][0]
         // Q-A: 字符串中有 - 就获取 - 后面的数据 没有就获取整个字段 提供正则
-        altTabItem.appTitle.match(/((?<=-\s*).*$)|(^((?!-).)*$)/g)
+        let [altTabItemTitle] = altTabItem.appTitle.match(
+          /((?<=-\s*).*$)|(^((?!-).)*$)/g
+        ) as Array<string>
+
+        pre[altTabItemTitle] = altTabObj.value[cur]
       }
 
       return pre
-    }, {})
+    }, {} as Record<string, Array<WindowAltTabTaskItem>>)
   })
   getAllTabs()
 
@@ -33,7 +37,6 @@
 </script>
 
 <template>
-  {{ altTabObj }}
   <div class="alt-tab-container">
     <div class="alt-tab-container__left">
       <a-input-search
