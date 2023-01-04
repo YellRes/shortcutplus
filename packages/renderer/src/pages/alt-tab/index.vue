@@ -20,7 +20,7 @@
         const altTabItem = altTabObj.value[cur][0]
         // Q-A: 字符串中有 - 就获取 - 后面的数据 没有就获取整个字段 提供正则
         let [altTabItemTitle] = altTabItem.appTitle.match(
-          /((?<=-\s*).*$)|(^((?!-).)*$)/g
+          /((?<=-(?=[^-]+$)).*$)|(^((?!-).)*$)/g
         ) as Array<string>
 
         pre[altTabItemTitle] = altTabObj.value[cur]
@@ -45,18 +45,22 @@
         @search="filterCurrentTabs"
       />
 
-      <a-list item-layout="horizontal" bordered :data-source="allTabs">
-        <template #renderItem="{ item }">
-          <!-- <a-list-item-meta>
+      <a-collapse>
+        <a-collapse-panel v-for="title in Object.keys(_altTabObj)" :key="title" :header="title">
+          <a-list item-layout="horizontal" bordered :data-source="_altTabObj[title]">
+            <template #renderItem="{ item }">
+              <!-- <a-list-item-meta>
             <template #title>{{ item.appTitle }}</template>
             <template #avatar>
               <a-avatar :src="item.appIcon" />
             </template>
           </a-list-item-meta> -->
 
-          <a-list-item @click="() => toggleThisWindows(item)">{{ item.appTitle }}</a-list-item>
-        </template>
-      </a-list>
+              <a-list-item @click="() => toggleThisWindows(item)">{{ item.appTitle }}</a-list-item>
+            </template>
+          </a-list>
+        </a-collapse-panel>
+      </a-collapse>
     </div>
   </div>
 </template>
