@@ -31,9 +31,12 @@ const isCloakedWindow = (hwnd: number) => {
   const buf = Buffer.alloc(1000)
   buf.type = _WIN64 ? ref.types.uint64 : ref.types.uint32
   // 查看 窗口是否被其所有者应用程序遮盖
-  const res = DwmGetWindowAttribute(hwnd, 1, buf, 10000)
+  const res = DwmGetWindowAttribute(hwnd, 14, buf, 1000)
 
-  return !res
+  let cloakedWindow = buf.deref()
+  if (res != 0) cloakedWindow = false
+
+  return cloakedWindow
 }
 
 const getLastVisibleActivePopUpOfWindow = (hwnd: number) => {
