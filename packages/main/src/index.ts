@@ -1,7 +1,8 @@
 // packages/main/src/index.ts
 import { join } from 'node:path'
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { initIPC } from './alt-tab/index'
+import { initIPC, initShortCut } from './alt-tab/index'
+import { createTray } from './alt-tab/tray'
 
 const isSingleInstance = app.requestSingleInstanceLock()
 
@@ -9,12 +10,13 @@ if (!isSingleInstance) {
   app.quit()
   process.exit(0)
 }
-
+let browserWindow: BrowserWindow
 async function createWindow() {
-  const browserWindow = new BrowserWindow({
+  browserWindow = new BrowserWindow({
     show: false,
     width: 1200,
-    height: 768,
+    frame: true,
+    skipTaskbar: true,
     webPreferences: {
       webviewTag: false,
       // Electron current directory will be at `dist/main`, we need to include
@@ -24,6 +26,7 @@ async function createWindow() {
   })
 
   initIPC()
+  initShortCut()
 
   // ipcMain.on('set-title', (event, title) => {
   //   const webContents = event.sender
@@ -69,4 +72,7 @@ app.on('activate', () => {
 app
   .whenReady()
   .then(createWindow)
+  .then(createTray)
   .catch((e) => console.error('Failed to create window:', e))
+
+export { browserWindow, app }

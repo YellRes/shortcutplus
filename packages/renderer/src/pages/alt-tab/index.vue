@@ -56,7 +56,9 @@
             </template>
           </a-list-item-meta> -->
 
-              <a-list-item @click="() => toggleThisWindows(item)">{{ item.appTitle }}</a-list-item>
+              <a-list-item @click="() => toggleThisWindows(item)">
+                <span class="alt-tab-listItem__title">{{ item.appTitle }}</span>
+              </a-list-item>
             </template>
           </a-list>
         </a-collapse-panel>
@@ -72,6 +74,9 @@
 
     .alt-tab-container__left {
       width: 100%;
+    }
+    .alt-tab-listItem__title {
+      cursor: pointer;
     }
   }
 </style>
