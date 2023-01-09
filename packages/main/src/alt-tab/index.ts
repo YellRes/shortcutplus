@@ -7,8 +7,7 @@ import { getAltTabTask, toggleThisWindows } from './system'
  * */
 
 async function handleAltTabTaskGet() {
-  const altTabTaskList = getAltTabTask()
-
+  const altTabTaskList = await getAltTabTask()
   return altTabTaskList
 }
 
