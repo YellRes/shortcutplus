@@ -93,17 +93,10 @@ const getProcessNameByHwnd = (pid: number, altTabItemInfo: WindowAltTabTaskItem)
   const processNameBuf = Buffer.alloc(1000)
   processNameBuf.type = ref.types.uchar
   GetModuleFileNameExA(processHandle, 0, processNameBuf, 1000)
-  const processName = iconv.decode(processNameBuf, 'gbk').replace(/(\x00)*/gm, '')
-
-  if (!altTabObj[processName]) {
-    altTabObj[processName] = []
-  }
-
-  if (altTabItemInfo.appTitle) altTabObj[processName].push(altTabItemInfo)
+  altTabItemInfo.processName = iconv.decode(processNameBuf, 'gbk').replace(/(\x00)*/gm, '')
 }
 
 let allAltTabProcess: Array<WindowAltTabTaskItem> = []
-let altTabObj: Record<string, Array<WindowAltTabTaskItem>> = {}
 const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number, IParam) => {
   const res = isAltTabWindows(hwnd)
   if (res) {
@@ -116,8 +109,10 @@ const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number
     const finalStr = iconv.decode(buf, 'GBK')
     const altTabItemInfo = {
       appTitle: finalStr,
-      appHwnd: hwnd
+      appHwnd: hwnd,
+      processName: ''
     }
+
     // Q-A:  finalStr 字符串异常
     // A: user32 导入函数的问题
     if (finalStr) allAltTabProcess.push(altTabItemInfo)
@@ -131,13 +126,18 @@ const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number
 
   return true
 })
-const getAllInfo = () => {
-  allAltTabProcess = []
-  altTabObj = {}
-  EnumWindows(enumWindowsCallBack, 0)
-
-  return { allAltTabProcess, altTabObj }
-}
+/**
+ * allAltTabProcess
+ * EnumWindows 是个异步函数
+ */
+const getAllInfo = () =>
+  new Promise((res, rej) => {
+    allAltTabProcess = []
+    EnumWindows.async(enumWindowsCallBack, 0, (err) => {
+      if (err) return rej(err)
+      return res(allAltTabProcess)
+    })
+  })
 
 const toggleWindow = (appHwnd: number) => {
   SetForegroundWindow(appHwnd)

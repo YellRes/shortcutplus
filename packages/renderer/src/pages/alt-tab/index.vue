@@ -5,31 +5,52 @@
 
   const inputVal = ref<string>('')
   const filterCurrentTabs = () => {}
-  const allTabs = shallowRef<Array<AppTabItem>>([])
+  const allAltTabProcess = shallowRef<Array<AppTabItem>>([])
   const altTabObj = shallowRef<Record<string, Array<WindowAltTabTaskItem>>>({})
 
   const getAllTabs = async () => {
-    let { altTabObj: altTabData, allAltTabProcess } = await window.api.getAllAltTabTask()
-    allTabs.value = allAltTabProcess
-    altTabObj.value = altTabData
+    let localAllAltTabProcess = await window.api.getAllAltTabTask()
+    allAltTabProcess.value = localAllAltTabProcess
   }
 
-  const _altTabObj = computed(() => {
-    return Object.keys(altTabObj.value).reduce((pre, cur) => {
-      if (altTabObj.value[cur].length) {
-        const altTabItem = altTabObj.value[cur][0]
-        // Q-A: 字符串中有 - 就获取 - 后面的数据 没有就获取整个字段 提供正则
-        let [altTabItemTitle] = altTabItem.appTitle.match(
-          /((?<=-(?=[^-]+$)).*$)|(^((?!-).)*$)/g
-        ) as Array<string>
+  const _altTabObj = computed({
+    get: () => {
+      return Object.keys(altTabObj.value).reduce((pre, cur) => {
+        if (altTabObj.value[cur].length) {
+          const altTabItem = altTabObj.value[cur][0]
+          // Q-A: 字符串中有 - 就获取 - 后面的数据 没有就获取整个字段 提供正则
+          let [altTabItemTitle] = altTabItem.appTitle.match(
+            /((?<=-(?=[^-]+$)).*$)|(^((?!-).)*$)/g
+          ) as Array<string>
 
-        pre[altTabItemTitle] = altTabObj.value[cur]
+          pre[altTabItemTitle] = altTabObj.value[cur]
+        }
+
+        return pre
+      }, {} as Record<string, Array<WindowAltTabTaskItem>>)
+    },
+    set: (val) => {
+      if (val.length === 0) return getAllTabs()
+      filterAltTabByInputVal()
+    }
+  })
+  getAllTabs()
+
+  const filterAltTabByInputVal = () => {
+    altTabObj.value = Object.keys(altTabObj.value).reduce((pre, cur) => {
+      if (
+        altTabObj.value[cur].length &&
+        altTabObj.value[cur].find((item) => item.appTitle.includes(inputVal.value))
+      ) {
+        pre[cur] = altTabObj.value[cur].filter((item) => item.appTitle.includes(inputVal.value))
       }
 
       return pre
     }, {} as Record<string, Array<WindowAltTabTaskItem>>)
-  })
-  getAllTabs()
+  }
+  // watch(inputVal, (val) => {
+  //   _altTabObj.value = val
+  // })
 
   const toggleThisWindows = (item: WindowAltTabTaskItem) => {
     window.api.toggleThisWindows(item.appHwnd)

@@ -6,9 +6,9 @@ import { getAllInfo, toggleWindow } from './windows'
 
 // Q-A: : Dynamic Symbol Retrieval Error Win32 error 127
 // A: user32 中函数名称导入错误
-export const getAltTabTask = () => {
-  const { allAltTabProcess, altTabObj } = getAllInfo()
-  return { allAltTabProcess, altTabObj }
+export const getAltTabTask = async () => {
+  const altTabTaskList = await getAllInfo()
+  return altTabTaskList
 }
 
 export const toggleThisWindows = (appHwnd: string) => {
