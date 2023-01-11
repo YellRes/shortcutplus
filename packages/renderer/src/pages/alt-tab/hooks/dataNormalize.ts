@@ -1,20 +1,32 @@
 import { ref, shallowRef, computed } from 'vue'
-import { AppTabItem } from '../type'
 import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
+import formatLocalAltTabTaskArr from '../util/formatLocalAltTabTaskArr'
 
 const dataNormalize = () => {
   const inputVal = ref<string>('')
-  const allTabs = shallowRef<Array<AppTabItem>>([])
-  const allTabsNameAndChildItem = shallowRef<Record<string, Array<WindowAltTabTaskItem>>>({})
+  const allTabsArr = shallowRef<Array<WindowAltTabTaskItem>>([])
+  // 将 allTabsArr 数组的任务 通过单个item中的processName来分类
+  const allTabsNameToChildItemObj = computed<Record<string, Array<WindowAltTabTaskItem>>>(() =>
+    formatLocalAltTabTaskArr(allTabsArr.value)
+  )
 
-  //   const allTabsNameAndChildItemFilterByInputVal =
-  //   const allTabsNameAndChildItemFormat =
+  // 经过筛选过的 altTab 的任务
+  const tabsNameToChildItemObjFiltered = computed<Record<string, Array<WindowAltTabTaskItem>>>(
+    () => {
+      const selectedTabArr = allTabsArr.value.filter((item) =>
+        item.appTitle.includes(inputVal.value)
+      )
 
-  //   return {
-  //     inputVal,
-  //     allTabs,
-  //     allTabsNameAndChildItem
-  //   }
+      return formatLocalAltTabTaskArr(selectedTabArr)
+    }
+  )
+
+  return {
+    inputVal,
+    allTabsArr,
+    allTabsNameToChildItemObj,
+    tabsNameToChildItemObjFiltered
+  }
 }
 
 export default dataNormalize
