@@ -1,56 +1,27 @@
 <script setup lang="ts">
-  import { ref, shallowRef, computed } from 'vue'
+  import { ref, shallowRef, computed, watch } from 'vue'
   import { AppTabItem } from './type'
   import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
+  import useDataNormalize from './hooks/useDataNormalize'
 
-  const inputVal = ref<string>('')
-  const filterCurrentTabs = () => {}
-  const allAltTabProcess = shallowRef<Array<AppTabItem>>([])
-  const altTabObj = shallowRef<Record<string, Array<WindowAltTabTaskItem>>>({})
+  const {
+    inputVal,
+    allTabsArr,
+    filterCurrentTabs,
+    allTabsNameToChildItemObj,
+    tabsNameToChildItemObjFiltered
+  } = useDataNormalize()
 
   const getAllTabs = async () => {
     let localAllAltTabProcess = await window.api.getAllAltTabTask()
-    allAltTabProcess.value = localAllAltTabProcess
+    allTabsArr.value = localAllAltTabProcess
   }
-
-  const _altTabObj = computed({
-    get: () => {
-      return Object.keys(altTabObj.value).reduce((pre, cur) => {
-        if (altTabObj.value[cur].length) {
-          const altTabItem = altTabObj.value[cur][0]
-          // Q-A: 字符串中有 - 就获取 - 后面的数据 没有就获取整个字段 提供正则
-          let [altTabItemTitle] = altTabItem.appTitle.match(
-            /((?<=-(?=[^-]+$)).*$)|(^((?!-).)*$)/g
-          ) as Array<string>
-
-          pre[altTabItemTitle] = altTabObj.value[cur]
-        }
-
-        return pre
-      }, {} as Record<string, Array<WindowAltTabTaskItem>>)
-    },
-    set: (val) => {
-      if (val.length === 0) return getAllTabs()
-      filterAltTabByInputVal()
-    }
-  })
   getAllTabs()
 
-  const filterAltTabByInputVal = () => {
-    altTabObj.value = Object.keys(altTabObj.value).reduce((pre, cur) => {
-      if (
-        altTabObj.value[cur].length &&
-        altTabObj.value[cur].find((item) => item.appTitle.includes(inputVal.value))
-      ) {
-        pre[cur] = altTabObj.value[cur].filter((item) => item.appTitle.includes(inputVal.value))
-      }
-
-      return pre
-    }, {} as Record<string, Array<WindowAltTabTaskItem>>)
-  }
-  // watch(inputVal, (val) => {
-  //   _altTabObj.value = val
-  // })
+  const activeTabKey = ref<Array<string>>([])
+  watch(tabsNameToChildItemObjFiltered, (val) => {
+    activeTabKey.value = Object.keys(val)
+  })
 
   const toggleThisWindows = (item: WindowAltTabTaskItem) => {
     window.api.toggleThisWindows(item.appHwnd)
@@ -66,9 +37,17 @@
         @search="filterCurrentTabs"
       />
 
-      <a-collapse>
-        <a-collapse-panel v-for="title in Object.keys(_altTabObj)" :key="title" :header="title">
-          <a-list item-layout="horizontal" bordered :data-source="_altTabObj[title]">
+      <a-collapse class="collapse-container" v-model:activeKey="activeTabKey">
+        <a-collapse-panel
+          v-for="title in Object.keys(tabsNameToChildItemObjFiltered)"
+          :key="title"
+          :header="title"
+        >
+          <a-list
+            item-layout="horizontal"
+            bordered
+            :data-source="tabsNameToChildItemObjFiltered[title]"
+          >
             <template #renderItem="{ item }">
               <!-- <a-list-item-meta>
             <template #title>{{ item.appTitle }}</template>
@@ -92,9 +71,17 @@
   .alt-tab-container {
     display: flex;
     width: 100%;
+    height: 100vh;
 
     .alt-tab-container__left {
       width: 100%;
+      display: flex;
+      flex-direction: column;
+
+      .collapse-container {
+        flex: 1;
+        overflow: auto;
+      }
     }
     .alt-tab-listItem__title {
       cursor: pointer;

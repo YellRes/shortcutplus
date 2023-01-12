@@ -12,5 +12,5 @@ export const getAltTabTask = async () => {
 }
 
 export const toggleThisWindows = (appHwnd: string) => {
-  // toggleWindow(appHwnd)
+  toggleWindow(appHwnd)
 }

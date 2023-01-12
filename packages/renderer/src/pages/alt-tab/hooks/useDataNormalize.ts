@@ -5,6 +5,8 @@ import formatLocalAltTabTaskArr from '../util/formatLocalAltTabTaskArr'
 const dataNormalize = () => {
   const inputVal = ref<string>('')
   const allTabsArr = shallowRef<Array<WindowAltTabTaskItem>>([])
+  const filterCurrentTabs = () => {}
+
   // 将 allTabsArr 数组的任务 通过单个item中的processName来分类
   const allTabsNameToChildItemObj = computed<Record<string, Array<WindowAltTabTaskItem>>>(() =>
     formatLocalAltTabTaskArr(allTabsArr.value)
@@ -14,7 +16,7 @@ const dataNormalize = () => {
   const tabsNameToChildItemObjFiltered = computed<Record<string, Array<WindowAltTabTaskItem>>>(
     () => {
       const selectedTabArr = allTabsArr.value.filter((item) =>
-        item.appTitle.includes(inputVal.value)
+        item.appTitle.toLocaleLowerCase().includes(inputVal.value)
       )
 
       return formatLocalAltTabTaskArr(selectedTabArr)
@@ -24,6 +26,7 @@ const dataNormalize = () => {
   return {
     inputVal,
     allTabsArr,
+    filterCurrentTabs,
     allTabsNameToChildItemObj,
     tabsNameToChildItemObjFiltered
   }
