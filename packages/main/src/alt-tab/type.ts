@@ -1,6 +1,6 @@
 export interface WindowAltTabTaskItem {
   appHwnd: number
-  appIcon?: string
+  appIcon?: string | undefined
   appTitle: string
   processName: string
 }
