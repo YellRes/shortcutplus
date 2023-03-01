@@ -49,7 +49,7 @@ const setupMainWatcher = async () => {
     spawnProcess = spawn(String(electronPath), ['.'])
 
     spawnProcess.stderr.on('data', (data: any) => {
-      console.log(data)
+      console.log(data, 'spawnProcess.stderr')
     })
 
     spawnProcess.on('close', (data: any) => {

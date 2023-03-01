@@ -12,10 +12,17 @@
     "lib": ["ESNext", "DOM"],
     "skipLibCheck": true,
     "noEmit": true,
+    "paths": {
+      "package/*": ["package/*"], 
+      "main/*": ["package/main/*"],
+      "preload/*": ["package/preload/*"],
+      "asset/*": ["asset/*"]
+    },
+    "baseUrl": "./"
   },
   "ts-node": {
     "esm": true
   },
-  "include": ["./scripts/**/*.ts", "./scripts/**/*.d.ts"],
+  "include": ["./scripts/*.ts", "./scripts/*.d.ts", "package/**/*.ts", "package/**/*.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
