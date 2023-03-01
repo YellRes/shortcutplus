@@ -4,6 +4,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { initIPC, initShortCut } from './alt-tab/index'
 import { createTray } from './alt-tab/tray'
 
+const testAddon = require('../../build/Release/testAddon.node')
 const isSingleInstance = app.requestSingleInstanceLock()
 
 if (!isSingleInstance) {
@@ -15,7 +16,7 @@ async function createWindow() {
   browserWindow = new BrowserWindow({
     show: false,
     width: 1200,
-    frame: true,
+    // frame: false,
     skipTaskbar: true,
     webPreferences: {
       webviewTag: false,
@@ -27,12 +28,6 @@ async function createWindow() {
 
   initIPC()
   initShortCut()
-
-  // ipcMain.on('set-title', (event, title) => {
-  //   const webContents = event.sender
-  //   const win = BrowserWindow.fromWebContents(webContents)
-  //   win.setTitle(title)
-  // })
 
   // If you install `show: true` then it can cause issues when trying to close the window.
   // Use `show: false` and listener events `ready-to-show` to fix these issues.
@@ -48,6 +43,8 @@ async function createWindow() {
 
   await browserWindow.loadURL(pageUrl)
 
+  browserWindow.setParentWindow(null)
+  testAddon.getThumbnail()
   return browserWindow
 }
 
@@ -63,8 +60,10 @@ app.on('window-all-closed', () => {
   }
 })
 
+let instanceWindow
 app.on('activate', () => {
-  createWindow().catch((err) =>
+  instanceWindow = createWindow()
+  instanceWindow.catch((err) =>
     console.error('Error while trying to handle activate Electron event:', err)
   )
 })
@@ -75,4 +74,4 @@ app
   .then(createTray)
   .catch((e) => console.error('Failed to create window:', e))
 
-export { browserWindow, app }
+export { browserWindow, app, instanceWindow }

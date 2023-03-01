@@ -1,11 +1,17 @@
-import { libDwmApi, libUser32Api, libProcessThreadsApi, windowType, libPsApi } from '../lib/window'
 import ref from 'ref-napi'
 import iconv from 'iconv-lite'
 import ffi from 'ffi-napi'
-import { WindowAltTabTaskItem } from './type'
+import {
+  libDwmApi,
+  libUser32Api,
+  libProcessThreadsApi,
+  windowType,
+  libPsApi
+} from '../../lib/window'
+import { WindowAltTabTaskItem } from '../type'
 
 const { Def, BOOL, HANDLE, LONG_PTR } = windowType
-const { DwmGetWindowAttribute } = libDwmApi
+const { DwmGetWindowAttribute, DwmRegisterThumbnail } = libDwmApi
 const {
   EnumWindows,
   GetShellWindow,
@@ -15,7 +21,8 @@ const {
   IsWindowVisible,
   GetWindowTextA,
   GetWindowTextLengthA,
-  GetWindowThreadProcessId
+  GetWindowThreadProcessId,
+  ShowWindow
 } = libUser32Api
 
 // Q-A: SetForegroundWindow 放到 libUser32Api 导入后 会出现中文乱码情况
@@ -28,10 +35,10 @@ const { GetModuleFileNameExA } = libPsApi
 const _WIN64 = process.arch === 'x64'
 
 const isCloakedWindow = (hwnd: number) => {
-  const buf = Buffer.alloc(1000)
+  const buf = Buffer.alloc(200)
   buf.type = _WIN64 ? ref.types.uint64 : ref.types.uint32
   // 查看 窗口是否被其所有者应用程序遮盖
-  const res = DwmGetWindowAttribute(hwnd, 14, buf, 1000)
+  const res = DwmGetWindowAttribute(hwnd, 14, buf, 200)
 
   let cloakedWindow = buf.deref()
   if (res != 0) cloakedWindow = false
@@ -90,9 +97,9 @@ const isAltTabWindows = (hwnd: number) => {
 const getProcessNameByHwnd = (pid: number, altTabItemInfo: WindowAltTabTaskItem) => {
   const processHandle = OpenProcess(0x0400 | 0x0010, 0, pid)
 
-  const processNameBuf = Buffer.alloc(1000)
+  const processNameBuf = Buffer.alloc(200)
   processNameBuf.type = ref.types.uchar
-  GetModuleFileNameExA(processHandle, 0, processNameBuf, 1000)
+  GetModuleFileNameExA(processHandle, 0, processNameBuf, 200)
   altTabItemInfo.processName = iconv.decode(processNameBuf, 'gbk').replace(/(\x00)*/gm, '')
 }
 
@@ -117,7 +124,7 @@ const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number
     // A: user32 导入函数的问题
     if (finalStr) allAltTabProcess.push(altTabItemInfo)
 
-    const processIdBuf = Buffer.alloc(1000)
+    const processIdBuf = Buffer.alloc(200)
     processIdBuf.type = ref.types.uint16
     GetWindowThreadProcessId(hwnd, processIdBuf)
     // 获取hwnd的进程名字
@@ -140,7 +147,21 @@ const getAllInfo = () =>
   })
 
 const toggleWindow = (appHwnd: number) => {
+  ShowWindow(appHwnd, 1)
   SetForegroundWindow(appHwnd)
 }
 
-export { getAllInfo, toggleWindow }
+const getWindowCurrentProcessThumbnail = (hwnd: number, sourceHwnd: number) => {
+  // TODO: 定义buffer的时候 该buffer该定义多大
+  // int类型一般是4个字节 Buffer.alloc(4)
+  const thumbBuf = Buffer.alloc(8)
+
+  // TODO: thumbPtr Pointer<number> 如何在node中展示
+  DwmRegisterThumbnail(hwnd, sourceHwnd, thumbBuf)
+  // node-ffi 中如何定义window中系统中的类型
+  //
+
+  return thumbBuf
+}
+
+export { getAllInfo, toggleWindow, getWindowCurrentProcessThumbnail }

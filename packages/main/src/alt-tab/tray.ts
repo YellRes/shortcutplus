@@ -6,9 +6,7 @@ export const createTray = () => {
    * Q-A: 文件中的路径最后都是打包后的路径
    *
    */
-  const icon = nativeImage.createFromPath(
-    path.normalize(`${__dirname}/../../asset/image/tools.png`)
-  )
+  const icon = nativeImage.createFromPath(path.normalize('asset/image/tools.png'))
 
   const tray = new Tray(icon)
 

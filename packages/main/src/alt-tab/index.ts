@@ -1,9 +1,10 @@
 import { ipcMain, globalShortcut } from 'electron'
 import { app as electronApp, browserWindow } from '../index'
-import { getAltTabTask, toggleThisWindows } from './system'
+import { getAltTabTask, toggleThisWindows, getSelfHwnd } from './system'
 
 /**
  * app 和 windows 是什么关系
+ * 一个app 会有多个 window
  * */
 
 async function handleAltTabTaskGet() {
@@ -11,6 +12,10 @@ async function handleAltTabTaskGet() {
   return altTabTaskList
 }
 
+async function handleCurrentHwnd() {
+  const currentHwnd = await getSelfHwnd()
+  return currentHwnd
+}
 /**
  * 初始化 项目中进程通信
  *
@@ -20,6 +25,7 @@ async function handleAltTabTaskGet() {
  */
 export const initIPC = () => {
   ipcMain.handle('get-altTab-task', handleAltTabTaskGet)
+  ipcMain.handle('get-current-hwnd', handleCurrentHwnd)
 
   ipcMain.on('toggle-this-windows', (event, apphwnd) => {
     toggleThisWindows(apphwnd)

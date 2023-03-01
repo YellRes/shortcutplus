@@ -1,8 +1,3 @@
-/**
- * Q-A:
- * Q: node 中 typescript 的使用
- */
-
 import ffi from 'ffi-napi'
 import { windowType } from '../index'
 
@@ -17,8 +12,7 @@ const libUser32 = ffi.Library('user32', {
   GetWindowTextA: [Def.int, [HANDLE, Def.uint16Ptr, Def.int]],
   GetWindowTextLengthA: [Def.int, [Def.int]],
   GetWindowThreadProcessId: [Def.int, [HANDLE, Def.uint16Ptr]],
-  GetWindowModuleFileNameA: ['int', [HANDLE, 'uchar*', 'int']],
-  ShowWindow: [Def.bool, [HANDLE, 'int']]
+  GetWindowModuleFileNameA: ['int', [HANDLE, 'uchar*', 'int']]
 })
 
 export default libUser32
