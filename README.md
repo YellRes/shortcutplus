@@ -57,8 +57,8 @@ electron中并没有提供直接的api调用。
 所以这里我使用`node-ffi`调用系统原生dll函数，来获取所有的进程信息。
 参考了如下： 
 
-- 
-- 
+- [stackoverflow问答：如何获取alt-tab中的应用](https://stackoverflow.com/questions/210504/enumerate-windows-like-alt-tab-does)
+- [active-win 项目 获取目前运行中的程序](https://github.com/sindresorhus/active-win)
 
 2. 系统中的icon图标，进程的预览图如何传递到渲染进程中？
 
