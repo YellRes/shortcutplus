@@ -4,7 +4,7 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { initIPC, initShortCut } from './alt-tab/index'
 import { createTray } from './alt-tab/tray'
 
-const testAddon = require('../../build/Release/testAddon.node')
+// const testAddon = require('../../build/Release/testAddon.node')
 const isSingleInstance = app.requestSingleInstanceLock()
 
 if (!isSingleInstance) {
@@ -44,7 +44,7 @@ async function createWindow() {
   await browserWindow.loadURL(pageUrl)
 
   browserWindow.setParentWindow(null)
-  testAddon.getThumbnail()
+  // testAddon.getThumbnail()
   return browserWindow
 }
 
