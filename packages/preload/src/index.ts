@@ -7,7 +7,8 @@ contextBridge.exposeInMainWorld('api', {
   // Open an URL into the default web-browser.
   openUrl: (url: string) => shell.openExternal(url),
   getAllAltTabTask: () => ipcRenderer.invoke('get-altTab-task'),
-  toggleThisWindows: (appHwnd: number) => ipcRenderer.send('toggle-this-windows', appHwnd)
+  toggleThisWindows: (appHwnd: number) => ipcRenderer.send('toggle-this-windows', appHwnd),
+  getCurrentHwnd: () => ipcRenderer.invoke('get-current-hwnd')
 })
 
 contextBridge.exposeInMainWorld('electronAPI', {
