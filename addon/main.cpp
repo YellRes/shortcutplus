@@ -14,48 +14,68 @@ namespace getThumbnail
 
 void getThumbnail::GetThumbnail()
 {
-    HRESULT hr = 0;
-    HTHUMBNAIL thumbnail = NULL;
+    // HRESULT hr = 0;
+    // SIZE size = {100, 100};
+    // HTHUMBNAIL thumbnail = NULL;
 
-    HWND targetHwnd = FindWindowA(NULL, "Vite + Vue + TS");
-    HWND sourceHwnd = FindWindowA(NULL, "shortcutsplus - Visual Studio Code");
+    // HWND targetHwnd = FindWindowA(NULL, "Vite + Vue + TS");
+    // HWND sourceHwnd = FindWindowA(NULL, "New Tab - Google Chrome);
 
-    hr = DwmRegisterThumbnail(targetHwnd, sourceHwnd, &thumbnail);
+    // hr = DwmRegisterThumbnail(targetHwnd, sourceHwnd, &size, &thumbnail);
 
-    if (SUCCEEDED(hr))
-    {
-        /**
-         * TODO: 如何设置 缩略图 的位置
-         * */
-        RECT dest = {0, 50, 100, 150};
+    // if (SUCCEEDED(hr))
+    // {
+    //     RECT dest = {100, 50, 100, 150};
 
-        DWM_THUMBNAIL_PROPERTIES dskThumbProps;
-        dskThumbProps.dwFlags = DWM_TNP_SOURCECLIENTAREAONLY | DWM_TNP_VISIBLE | DWM_TNP_OPACITY | DWM_TNP_RECTDESTINATION;
-        dskThumbProps.fSourceClientAreaOnly = FALSE;
-        dskThumbProps.fVisible = TRUE;
-        dskThumbProps.opacity = (255 * 70) / 100;
-        dskThumbProps.rcDestination = dest;
+    //     DWM_THUMBNAIL_PROPERTIES dskThumbProps;
+    //     dskThumbProps.dwFlags = DWM_TNP_SOURCECLIENTAREAONLY | DWM_TNP_VISIBLE | DWM_TNP_OPACITY | DWM_TNP_RECTDESTINATION;
+    //     dskThumbProps.fSourceClientAreaOnly = FALSE;
+    //     dskThumbProps.fVisible = TRUE;
+    //     dskThumbProps.opacity = (255 * 70) / 100;
+    //     dskThumbProps.rcDestination = dest;
 
-        hr = DwmUpdateThumbnailProperties(thumbnail, &dskThumbProps);
-    }
+    //     hr = DwmUpdateThumbnailProperties(thumbnail, &dskThumbProps);
+    // }
 
     // return hr
+
+    // 1. 获取窗口句柄并创建设备上下文
+    HWND hwnd = FindWindow(NULL, "Target Window");
+    HDC hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL);
+    HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    HDC hdcCompat = CreateCompatibleDC(hdcScreen);
+
+    // 2. 调用 PrintWindow 获取窗口截图
+    PrintWindow(hwnd, hdcCompat, 0);
+
+    // 3. 获取位图信息和数据
+    BITMAPINFO bi;
+    ZeroMemory(&bi, sizeof(bi));
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    GetDIBits(hdcCompat, (HBITMAP)GetCurrentObject(hdcCompat, OBJ_BITMAP),
+              0, 0, NULL, &bi, DIB_RGB_COLORS);
+    BYTE *bits = new BYTE[bi.bmiHeader.biSizeImage];
+    GetDIBits(hdcCompat, (HBITMAP)GetCurrentObject(hdcCompat, OBJ_BITMAP),
+              0, bi.bmiHeader.biHeight, bits, &bi, DIB_RGB_COLORS);
+
+    // 4. 将位图数据转换为 base64
+    int rawLen = bi.bmiHeader.biSizeImage;
+    BYTE *rawData = bits;
+    // char *base64 = base64_encode(rawData, rawLen);
+
+    return bits
+
+    // 5. 释放资源
+    // DeleteDC(hdcScreen);
+    // DeleteDC(hdcMem);
+    // DeleteDC(hdcCompat);
+    // delete[] bits;
 }
 
 void getThumbnail::GetThumbnailWrapped(const Napi::CallbackInfo &info)
 {
 
     Napi::Env env = info.Env();
-    // if (info.Length() < 3 || !info[0].IsNumber() || !info[1].IsNumber())
-    // {
-    //     Napi::TypeError::New(env, "Number expected").ThrowAsJavaScriptException();
-    // }
-
-    // Napi::Number first = info[0].As<Napi::Number>();
-    // Napi::Number second = info[1].As<Napi::Number>();
-    // Napi::Number third = info[2].As<Napi::Value>();
-
-    // int returnValue = getThumbnail::GetThumbnail(first.Int32Value(), second.Int32Value());
 
     getThumbnail::GetThumbnail();
 }
