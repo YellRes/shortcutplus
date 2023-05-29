@@ -159,7 +159,6 @@ const getWindowCurrentProcessThumbnail = (hwnd: number, sourceHwnd: number) => {
   // TODO: thumbPtr Pointer<number> 如何在node中展示
   DwmRegisterThumbnail(hwnd, sourceHwnd, thumbBuf)
   // node-ffi 中如何定义window中系统中的类型
-  //
 
   return thumbBuf
 }

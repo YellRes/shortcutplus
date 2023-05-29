@@ -1,10 +1,10 @@
 // packages/main/src/index.ts
 import { join } from 'node:path'
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { initIPC, initShortCut } from './alt-tab/index'
+import { initIPC, initShortCut, getAppThumbnail } from './alt-tab/index'
 import { createTray } from './alt-tab/tray'
 
-const testAddon = require('../../build/Release/testAddon.node')
+// const testAddon = require('../../build/Release/testAddon.node')
 const isSingleInstance = app.requestSingleInstanceLock()
 
 if (!isSingleInstance) {
@@ -16,7 +16,7 @@ async function createWindow() {
   browserWindow = new BrowserWindow({
     show: false,
     width: 1200,
-    // frame: false,
+    frame: false,
     skipTaskbar: true,
     webPreferences: {
       webviewTag: false,
@@ -28,6 +28,7 @@ async function createWindow() {
 
   initIPC()
   initShortCut()
+  getAppThumbnail({})
 
   // If you install `show: true` then it can cause issues when trying to close the window.
   // Use `show: false` and listener events `ready-to-show` to fix these issues.
@@ -44,7 +45,7 @@ async function createWindow() {
   await browserWindow.loadURL(pageUrl)
 
   browserWindow.setParentWindow(null)
-  testAddon.getThumbnail()
+  // testAddon.getThumbnail()
   return browserWindow
 }
 

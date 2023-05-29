@@ -8,7 +8,10 @@ contextBridge.exposeInMainWorld('api', {
   openUrl: (url: string) => shell.openExternal(url),
   getAllAltTabTask: () => ipcRenderer.invoke('get-altTab-task'),
   toggleThisWindows: (appHwnd: number) => ipcRenderer.send('toggle-this-windows', appHwnd),
-  getCurrentHwnd: () => ipcRenderer.invoke('get-current-hwnd')
+  getCurrentHwnd: () => ipcRenderer.invoke('get-current-hwnd'),
+  getAppThumbnail: () => ipcRenderer.invoke('get-app-thumbnail'),
+  consoleLog: () => ipcRenderer.invoke('console-log'),
+  hideMainApp: () => ipcRenderer.invoke('hide-main-app')
 })
 
 contextBridge.exposeInMainWorld('electronAPI', {
