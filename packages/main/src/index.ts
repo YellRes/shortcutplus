@@ -28,7 +28,6 @@ async function createWindow() {
 
   initIPC()
   initShortCut()
-  getAppThumbnail({})
 
   // If you install `show: true` then it can cause issues when trying to close the window.
   // Use `show: false` and listener events `ready-to-show` to fix these issues.
