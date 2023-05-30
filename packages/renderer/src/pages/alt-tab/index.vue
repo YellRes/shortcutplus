@@ -53,27 +53,28 @@
    */
   const toggleThisWindows = (item: WindowAltTabTaskItem) => {
     window.api.toggleThisWindows(item.appHwnd)
+    window.api.hideMainApp()
   }
 
   /**
    * 应用缩略图
    * */
-  const appThumbnail = ref<string>('')
+  // const appThumbnail = ref<string>('')
   const getAppThumbnail = async (appInfo: WindowAltTabTaskItem) => {
-    getConsoleLog()
-    try {
-      let sourceId = await window.api.getAppThumbnail(appInfo)
-      let currentStream = await createVideoStream(sourceId)
-      appThumbnail.value = await getAppScreenshot(currentStream)
-    } catch (e) {
-      appThumbnail.value = ''
-      console.log(e)
-    }
+    // getConsoleLog()
+    // try {
+    //   let sourceId = await window.api.getAppThumbnail(appInfo)
+    //   let currentStream = await createVideoStream(sourceId)
+    //   appThumbnail.value = await getAppScreenshot(currentStream)
+    // } catch (e) {
+    //   appThumbnail.value = ''
+    //   console.log(e)
+    // }
   }
 </script>
 
 <template>
-  <pre>{{ consoleLogVal }}</pre>
+  <!-- <pre>{{ consoleLogVal }}</pre> -->
   <div>
     <a-input-search
       v-model:value="inputVal"

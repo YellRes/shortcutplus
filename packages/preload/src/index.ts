@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('api', {
   getCurrentHwnd: () => ipcRenderer.invoke('get-current-hwnd'),
   getAppThumbnail: (appInfo: any) => ipcRenderer.send('get-app-thumbnail', appInfo),
   consoleLog: () => ipcRenderer.invoke('console-log'),
-  hideMainApp: () => ipcRenderer.invoke('hide-main-app')
+  hideMainApp: () => ipcRenderer.send('hide-main-app')
 })
 
 contextBridge.exposeInMainWorld('electronAPI', {

@@ -31,6 +31,11 @@ export const initIPC = () => {
   ipcMain.on('toggle-this-windows', (event, apphwnd) => {
     toggleThisWindows(apphwnd)
   })
+
+  ipcMain.on('hide-main-app', () => {
+    // electronApp.hide()
+    browserWindow.hide()
+  })
 }
 
 /**
@@ -38,7 +43,8 @@ export const initIPC = () => {
  */
 export const initShortCut = () => {
   globalShortcut.register('Alt+4', () => {
-    browserWindow.focus()
+    browserWindow.show()
+    // browserWindow.focus()
   })
 }
 
