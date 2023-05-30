@@ -5,7 +5,8 @@
   import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
 
   import useDataNormalize from './hooks/useDataNormalize'
-  import { Item } from 'ant-design-vue/lib/menu'
+  import { getAppScreenshot } from './util/getAppScreenshot'
+  import { createVideoStream } from './util/createVideoStream'
 
   const currentHwnd = ref<Number>()
   const getCurrentHwnd = async () => {
@@ -59,10 +60,14 @@
    * */
   const appThumbnail = ref<string>('')
   const getAppThumbnail = async (appInfo: WindowAltTabTaskItem) => {
+    getConsoleLog()
     try {
-      appThumbnail.value = await window.api.getAppThumbnail(appInfo)
+      let sourceId = await window.api.getAppThumbnail(appInfo)
+      let currentStream = await createVideoStream(sourceId)
+      appThumbnail.value = await getAppScreenshot(currentStream)
     } catch (e) {
       appThumbnail.value = ''
+      console.log(e)
     }
   }
 </script>
@@ -108,7 +113,7 @@
       </div>
 
       <div class="alt-tab-container__right">
-        <img :src="appThumbnail" alt="应用缩略图" />
+        <img id="my-preview" :src="appThumbnail" alt="应用缩略图" />
       </div>
     </div>
   </div>

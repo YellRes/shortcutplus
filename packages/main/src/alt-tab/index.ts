@@ -60,11 +60,10 @@ export const initAppEvent = () => {
  * 缺点：只能找到激活的应用的截图 无法找到未激活应用的截图
  * */
 export const getAppThumbnail = (appInfo: WindowAltTabTaskItem) => {
-  const resultArr: Array<string> = []
   // 只能获取到 显示到桌面上的窗口
   desktopCapturer
     .getSources({
-      types: ['window', 'screen'],
+      types: ['window'],
       thumbnailSize: {
         width: 800,
         height: 600
@@ -75,7 +74,7 @@ export const getAppThumbnail = (appInfo: WindowAltTabTaskItem) => {
 
       for (const source of sources) {
         if (source.name === appInfo.appTitle) {
-          ipcMain.handle('get-app-thumbnail', () => new Promise((res) => res(source)))
+          ipcMain.handle('get-app-thumbnail', () => new Promise((res) => res(source.id)))
           break
         }
       }
