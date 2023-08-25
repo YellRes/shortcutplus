@@ -1,12 +1,13 @@
 <script setup lang="ts">
-  import { ref, shallowRef, computed, watch } from 'vue'
+  import { ref, watch } from 'vue'
   import { useIntervalFn } from '@vueuse/core'
-  import { AppTabItem } from './type'
+  // import { AppTabItem } from './type'
   import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
 
   import useDataNormalize from './hooks/useDataNormalize'
-  import { getAppScreenshot } from './util/getAppScreenshot'
-  import { createVideoStream } from './util/createVideoStream'
+  import { SearchOutlined } from '@ant-design/icons-vue'
+  // import { getAppScreenshot } from './util/getAppScreenshot'
+  // import { createVideoStream } from './util/createVideoStream'
 
   const currentHwnd = ref<Number>()
   const getCurrentHwnd = async () => {
@@ -16,9 +17,9 @@
   getCurrentHwnd()
 
   const consoleLogVal = ref<string>('')
-  const getConsoleLog = async () => {
-    consoleLogVal.value = await window.api.consoleLog()
-  }
+  // const getConsoleLog = async () => {
+  //   consoleLogVal.value = await window.api.consoleLog()
+  // }
 
   const {
     inputVal,
@@ -37,11 +38,11 @@
   }
   getAllTabs()
 
-  // 每隔15s 获取下目前打开的程序
+  // 每隔30s 获取下目前打开的程序
   useIntervalFn(() => {
     getAllTabs()
-    getConsoleLog()
-  }, 15000)
+    // getConsoleLog()
+  }, 30000)
 
   const activeTabKey = ref<Array<string>>([])
   watch(tabsNameToChildItemObjFiltered, (val) => {
@@ -60,28 +61,22 @@
    * 应用缩略图
    * */
   // const appThumbnail = ref<string>('')
-  const getAppThumbnail = async (appInfo: WindowAltTabTaskItem) => {
-    // getConsoleLog()
-    // try {
-    //   let sourceId = await window.api.getAppThumbnail(appInfo)
-    //   let currentStream = await createVideoStream(sourceId)
-    //   appThumbnail.value = await getAppScreenshot(currentStream)
-    // } catch (e) {
-    //   appThumbnail.value = ''
-    //   console.log(e)
-    // }
-  }
+  const getAppThumbnail = async (appInfo: WindowAltTabTaskItem) => {}
 </script>
 
 <template>
   <!-- <pre>{{ consoleLogVal }}</pre> -->
   <div>
-    <a-input-search
+    <a-input
       v-model:value="inputVal"
       placeholder="搜索当前tab"
       @search="filterCurrentTabs"
       size="large"
-    />
+    >
+      <template #prefix>
+        <search-outlined />
+      </template>
+    </a-input>
     <div class="alt-tab-container">
       <div class="alt-tab-container__left">
         <a-collapse class="collapse-container" v-model:activeKey="activeTabKey" :bordered="false">
@@ -100,7 +95,7 @@
                   <div>
                     <a-avatar :src="item.appIcon" />
                     <span
-                      class="alt-tab-listItem__title"
+                      class="alt-tab-listItem__title overflow-hidden break-all"
                       @mouseover="getAppThumbnail(item)"
                       @click="toggleThisWindows(item)"
                       >{{ item.appTitle }}
@@ -113,9 +108,9 @@
         </a-collapse>
       </div>
 
-      <div class="alt-tab-container__right">
+      <!-- <div class="alt-tab-container__right">
         <img id="my-preview" :src="appThumbnail" alt="应用缩略图" />
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
@@ -128,7 +123,7 @@
     padding-top: 20px;
 
     .alt-tab-container__left {
-      width: 50%;
+      width: 100%;
       display: flex;
       flex-direction: column;
 
