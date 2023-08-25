@@ -16,7 +16,7 @@ async function createWindow() {
   browserWindow = new BrowserWindow({
     show: false,
     width: 1200,
-    frame: false,
+    frame: true,
     skipTaskbar: true,
     webPreferences: {
       webviewTag: false,

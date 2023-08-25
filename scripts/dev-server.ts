@@ -74,3 +74,13 @@ const setupMainWatcher = async () => {
     console.error(err)
   }
 })().catch((err) => console.error(err))
+
+/**
+ * Q: 项目是如何启动的？
+ * A:
+ * 1. 启动 render 中的网页
+ *  1.1. 调用了 vite 的 build 和 createServer
+ *  1.2
+ * 2. 启动 main 中 electron 的服务
+ *
+ */
