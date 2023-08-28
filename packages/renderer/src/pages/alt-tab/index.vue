@@ -95,7 +95,7 @@
                   <div>
                     <a-avatar :src="item.appIcon" />
                     <span
-                      class="alt-tab-listItem__title overflow-hidden break-all"
+                      class="alt-tab-listItem__title overflow-hidden break-all mt-6 text-blue-600"
                       @mouseover="getAppThumbnail(item)"
                       @click="toggleThisWindows(item)"
                       >{{ item.appTitle }}
