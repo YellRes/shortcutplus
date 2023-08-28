@@ -29,12 +29,19 @@
     tabsNameToChildItemObjFiltered
   } = useDataNormalize()
 
+  const loading = ref(false)
   /**
    * 获取当前运行的程序
    * */
   const getAllTabs = async () => {
-    let localAllAltTabProcess = await window.api.getAllAltTabTask()
-    allTabsArr.value = localAllAltTabProcess
+    loading.value = true
+    try {
+      let localAllAltTabProcess = await window.api.getAllAltTabTask()
+      allTabsArr.value = localAllAltTabProcess
+    } catch (e) {
+      console.log(e)
+    }
+    loading.value = false
   }
   getAllTabs()
 
@@ -65,19 +72,21 @@
 </script>
 
 <template>
-  <!-- <pre>{{ consoleLogVal }}</pre> -->
-  <div>
-    <a-input
-      v-model:value="inputVal"
-      placeholder="搜索当前tab"
-      @search="filterCurrentTabs"
-      size="large"
-    >
-      <template #prefix>
-        <search-outlined />
-      </template>
-    </a-input>
-    <div class="alt-tab-container">
+  <div class="relative">
+    <div class="sticky top-0 bg-white z-10">
+      <a-input
+        v-model:value="inputVal"
+        placeholder="搜索当前运行中的应用"
+        @search="filterCurrentTabs"
+        size="large"
+      >
+        <template #prefix>
+          <search-outlined />
+        </template>
+      </a-input>
+    </div>
+    <a-spin v-if="loading" />
+    <div class="alt-tab-container" v-else>
       <div class="alt-tab-container__left">
         <a-collapse class="collapse-container" v-model:activeKey="activeTabKey" :bordered="false">
           <a-collapse-panel
@@ -92,7 +101,7 @@
             >
               <template #renderItem="{ item }">
                 <a-list-item>
-                  <div>
+                  <div class="max-w-[100%] text-ellipsis overflow-hidden whitespace-nowrap">
                     <a-avatar :src="item.appIcon" />
                     <span
                       class="alt-tab-listItem__title overflow-hidden break-all mt-6 text-blue-600"
@@ -119,8 +128,6 @@
   .alt-tab-container {
     display: flex;
     width: 100%;
-    height: 100vh;
-    padding-top: 20px;
 
     .alt-tab-container__left {
       width: 100%;
