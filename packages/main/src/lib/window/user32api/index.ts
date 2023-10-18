@@ -18,7 +18,11 @@ const libUser32 = ffi.Library('user32', {
   GetWindowTextLengthA: [Def.int, [Def.int]],
   GetWindowThreadProcessId: [Def.int, [HANDLE, Def.uint16Ptr]],
   GetWindowModuleFileNameA: ['int', [HANDLE, 'uchar*', 'int']],
-  ShowWindow: [Def.bool, [HANDLE, 'int']]
+  ShowWindow: [Def.bool, [HANDLE, 'int']],
+  GetWindowRect: [BOOL, [Def.long, LONG_PTR]],
+  PrintWindow: [BOOL, [Def.long, Def.long, Def.uint]],
+  ReleaseDC: [Def.int, [Def.long, Def.long]],
+  GetDC: [Def.long, [Def.long]]
 })
 
 export default libUser32

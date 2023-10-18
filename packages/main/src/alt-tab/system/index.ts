@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, nativeImage } from 'electron'
 import { getAllInfo, toggleWindow, getWindowCurrentProcessThumbnail } from './windows'
 import type { WindowAltTabTaskItem } from '../type'
 import { browserWindow } from '../../index'
+import fs from 'fs'
 
 // Q-A: 导入ffi-napi 后 打包出来的文件 electron 执行后直接退出
 // A: ArrayBuffer backing stores must be allocated inside the sandbox address space
@@ -47,6 +48,20 @@ const getProgressTaskIcon = async (taskListArr: Array<WindowAltTabTaskItem>) => 
 // 获取进程的缩略图
 export const getSelfHwnd = () => browserWindow.getNativeWindowHandle()
 
-// export const getCurrentProcessThumbnail = () => {
-//   getWindowCurrentProcessThumbnail(getSelfHwnd(), )
-// }
+// 获取进程的缩略图
+export const getCurrentProcessThumbnail = (hwnd: number) => {
+  try {
+    const { bmp } = getWindowCurrentProcessThumbnail(hwnd)
+
+    // 将缩略图保存到文件
+    const filePath = 'thumbnail.bmp'
+    fs.writeFileSync(filePath, bmp)
+
+    // 在 Electron 窗口中显示缩略图
+    const thumbnailImage = nativeImage.createFromPath(filePath)
+    console.log(thumbnailImage.toDataURL(), 'thumbnailImage.toDataURL()')
+    return thumbnailImage.toDataURL()
+  } catch (e) {
+    console.warn(e)
+  }
+}

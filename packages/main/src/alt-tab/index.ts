@@ -1,6 +1,6 @@
-import { ipcMain, globalShortcut, desktopCapturer } from 'electron'
+import { ipcMain, globalShortcut, desktopCapturer, app } from 'electron'
 import { app as electronApp, browserWindow } from '../index'
-import { getAltTabTask, toggleThisWindows, getSelfHwnd } from './system'
+import { getAltTabTask, toggleThisWindows, getSelfHwnd, getCurrentProcessThumbnail } from './system'
 import { WindowAltTabTaskItem } from './type'
 
 /**
@@ -66,23 +66,10 @@ export const initAppEvent = () => {
  * 缺点：只能找到激活的应用的截图 无法找到未激活应用的截图
  * */
 export const getAppThumbnail = (appInfo: WindowAltTabTaskItem) => {
-  // 只能获取到 显示到桌面上的窗口
-  desktopCapturer
-    .getSources({
-      types: ['window'],
-      thumbnailSize: {
-        width: 800,
-        height: 600
-      }
-    })
-    .then(async (sources) => {
-      ipcMain.handle('console-log', () => new Promise((res) => res(sources)))
+  const { appHwnd } = appInfo
 
-      for (const source of sources) {
-        if (source.name === appInfo.appTitle) {
-          ipcMain.handle('get-app-thumbnail', () => new Promise((res) => res(source.id)))
-          break
-        }
-      }
-    })
+  ipcMain.handle(
+    'get-app-thumbnail',
+    () => new Promise((res) => res(getCurrentProcessThumbnail(appHwnd)))
+  )
 }
