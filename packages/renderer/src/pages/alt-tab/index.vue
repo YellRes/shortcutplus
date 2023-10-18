@@ -68,7 +68,10 @@
    * 应用缩略图
    * */
   // const appThumbnail = ref<string>('')
-  const getAppThumbnail = async (appInfo: WindowAltTabTaskItem) => {}
+  const getAppThumbnail = async (appInfo: WindowAltTabTaskItem) => {
+    const res = await window.api.getAppThumbnail(appInfo)
+    console.log(res)
+  }
 </script>
 
 <template>

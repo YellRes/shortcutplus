@@ -74,4 +74,6 @@ app
   .then(createTray)
   .catch((e) => console.error('Failed to create window:', e))
 
+  console.log('dsafas')
+
 export { browserWindow, app, instanceWindow }
