@@ -1,7 +1,7 @@
 // packages/main/src/index.ts
 import { join } from 'node:path'
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { initIPC, initShortCut } from './alt-tab/index'
+import { initIPC, initShortCut, getAppThumbnail } from './alt-tab/index'
 import { createTray } from './alt-tab/tray'
 
 // const testAddon = require('../../build/Release/testAddon.node')
@@ -16,7 +16,7 @@ async function createWindow() {
   browserWindow = new BrowserWindow({
     show: false,
     width: 1200,
-    // frame: false,
+    frame: true,
     skipTaskbar: true,
     webPreferences: {
       webviewTag: false,
@@ -73,5 +73,7 @@ app
   .then(createWindow)
   .then(createTray)
   .catch((e) => console.error('Failed to create window:', e))
+
+  console.log('dsafas')
 
 export { browserWindow, app, instanceWindow }

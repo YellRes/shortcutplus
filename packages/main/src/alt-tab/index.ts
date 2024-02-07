@@ -1,6 +1,7 @@
-import { ipcMain, globalShortcut } from 'electron'
+import { ipcMain, globalShortcut, desktopCapturer, app } from 'electron'
 import { app as electronApp, browserWindow } from '../index'
-import { getAltTabTask, toggleThisWindows, getSelfHwnd } from './system'
+import { getAltTabTask, toggleThisWindows, getSelfHwnd, getCurrentProcessThumbnail } from './system'
+import { WindowAltTabTaskItem } from './type'
 
 /**
  * app 和 windows 是什么关系
@@ -30,6 +31,11 @@ export const initIPC = () => {
   ipcMain.on('toggle-this-windows', (event, apphwnd) => {
     toggleThisWindows(apphwnd)
   })
+
+  ipcMain.on('hide-main-app', () => {
+    // electronApp.hide()
+    browserWindow.hide()
+  })
 }
 
 /**
@@ -37,7 +43,8 @@ export const initIPC = () => {
  */
 export const initShortCut = () => {
   globalShortcut.register('Alt+4', () => {
-    browserWindow.focus()
+    browserWindow.show()
+    // browserWindow.focus()
   })
 }
 
@@ -50,4 +57,19 @@ export const initAppEvent = () => {
     browserWindow.setPosition(0, -10000)
     browserWindow.hide()
   })
+}
+
+/**
+ * 获取app的系统截图
+ * TODO:
+ * 先使用 desktopCapturer.getSources 来实现
+ * 缺点：只能找到激活的应用的截图 无法找到未激活应用的截图
+ * */
+export const getAppThumbnail = (appInfo: WindowAltTabTaskItem) => {
+  const { appHwnd } = appInfo
+
+  ipcMain.handle(
+    'get-app-thumbnail',
+    () => new Promise((res) => res(getCurrentProcessThumbnail(appHwnd)))
+  )
 }

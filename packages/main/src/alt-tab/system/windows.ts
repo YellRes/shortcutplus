@@ -22,7 +22,11 @@ const {
   GetWindowTextA,
   GetWindowTextLengthA,
   GetWindowThreadProcessId,
-  ShowWindow
+  ShowWindow,
+  GetDC,
+  ReleaseDC,
+  PrintWindow,
+  GetWindowRect
 } = libUser32Api
 
 // Q-A: SetForegroundWindow 放到 libUser32Api 导入后 会出现中文乱码情况
@@ -151,17 +155,47 @@ const toggleWindow = (appHwnd: number) => {
   SetForegroundWindow(appHwnd)
 }
 
-const getWindowCurrentProcessThumbnail = (hwnd: number, sourceHwnd: number) => {
-  // TODO: 定义buffer的时候 该buffer该定义多大
-  // int类型一般是4个字节 Buffer.alloc(4)
-  const thumbBuf = Buffer.alloc(8)
+/**
+ * 获取窗口缩略图
+ */
+const getWindowCurrentProcessThumbnail = (hwnd: number) => {
+  // // TODO: 定义buffer的时候 该buffer该定义多大
+  // // int类型一般是4个字节 Buffer.alloc(4)
+  // const thumbBuf = Buffer.alloc(8)
+  // // TODO: thumbPtr Pointer<number> 如何在node中展示
+  // DwmRegisterThumbnail(hwnd, sourceHwnd, thumbBuf)
+  // // node-ffi 中如何定义window中系统中的类型
+  // return thumbBuf
 
-  // TODO: thumbPtr Pointer<number> 如何在node中展示
-  DwmRegisterThumbnail(hwnd, sourceHwnd, thumbBuf)
-  // node-ffi 中如何定义window中系统中的类型
-  //
+  const rect = Buffer.alloc(16)
+  GetWindowRect(hwnd, rect)
 
-  return thumbBuf
+  const left = rect.readInt32LE(0)
+  const top = rect.readInt32LE(4)
+  const right = rect.readInt32LE(8)
+  const bottom = rect.readInt32LE(12)
+
+  const width = right - left
+  const height = bottom - top
+
+  const hdcSrc = GetDC(hwnd)
+  const hdcDest = GetDC(0)
+
+  const bmp = Buffer.alloc(width * height * 4)
+  const result = PrintWindow(hwnd, hdcSrc, 0)
+
+  ReleaseDC(0, hdcDest)
+  ReleaseDC(hwnd, hdcSrc)
+
+  if (result) {
+    return {
+      bmp,
+      width,
+      height
+    }
+  } else {
+    throw new Error('无法获取缩略图')
+  }
 }
 
 export { getAllInfo, toggleWindow, getWindowCurrentProcessThumbnail }
