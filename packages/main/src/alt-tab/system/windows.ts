@@ -1,5 +1,4 @@
 import koffi from 'koffi'
-import iconv from 'iconv-lite'
 import { libDwmApi, libUser32Api, libProcessThreadsApi, EnumWindowsProc } from '../../lib/window'
 import { WindowAltTabTaskItem } from '../type'
 
@@ -11,13 +10,12 @@ const {
   GetAncestor,
   GetLastActivePopup,
   IsWindowVisible,
-  GetWindowTextA,
-  GetWindowTextLengthA,
+  GetWindowTextW,
   GetWindowThreadProcessId,
   ShowWindow,
   SetForegroundWindow
 } = libUser32Api
-const { OpenProcess, CloseHandle, QueryFullProcessImageNameA } = libProcessThreadsApi
+const { OpenProcess, CloseHandle, QueryFullProcessImageNameW } = libProcessThreadsApi
 
 // 窗口是否被其所有者应用程序遮盖（DWMWA_CLOAKED = 14）
 const isCloakedWindow = (hwnd: number) => {
@@ -76,12 +74,14 @@ const fillProcessName = (pid: number, altTabItemInfo: WindowAltTabTaskItem) => {
   if (!processHandle) return
 
   try {
-    const nameBuf = Buffer.allocUnsafe(512)
-    const sizePtr: number[] = [512]
-    const ok = QueryFullProcessImageNameA(processHandle, 0, nameBuf, sizePtr)
+    // W 版直接拿 UTF-16，按 utf16le 解码，避免 ANSI 代码页丢字（如路径含中文用户名）
+    const CAP = 512 // 字符数
+    const nameBuf = Buffer.allocUnsafe(CAP * 2)
+    const sizePtr: number[] = [CAP]
+    const ok = QueryFullProcessImageNameW(processHandle, 0, nameBuf, sizePtr)
     if (ok) {
-      // size 写回实际字符数（不含结尾 \0）。用原始字节按 GBK 解码，避免 koffi 默认 UTF-8 乱码
-      altTabItemInfo.processName = iconv.decode(nameBuf.subarray(0, sizePtr[0]), 'gbk')
+      // sizePtr 写回字符数（不含 \0）；UTF-16 每字符 2 字节
+      altTabItemInfo.processName = nameBuf.toString('utf16le', 0, sizePtr[0] * 2)
     }
   } finally {
     // 关键：用完必须关闭句柄，否则每轮枚举都会泄漏句柄
@@ -105,15 +105,13 @@ const getAllInfo = (): Promise<Array<WindowAltTabTaskItem>> => {
       // 跳过本应用自身的窗口（Electron 窗口由主进程创建，PID 即 process.pid）
       if (!pid || pid === process.pid) return true
 
-      const length = GetWindowTextLengthA(hwnd)
-      if (length <= 0) return true
+      // W 版取标题，原样拿 UTF-16，不经 ANSI 代码页转换（避免中文变成 ????）
+      const CAP = 512 // 标题最大字符数，足够覆盖正常窗口标题
+      const buf = Buffer.allocUnsafe(CAP * 2)
+      const len = GetWindowTextW(hwnd, buf, CAP)
+      if (len <= 0) return true
 
-      // +1 给结尾的 \0 留位，避免越界写
-      const buf = Buffer.allocUnsafe(length + 1)
-      GetWindowTextA(hwnd, buf, length + 1)
-
-      // 原始字节按 GBK 解码（Win32 *A 接口在中文系统返回 GBK）
-      const finalStr = iconv.decode(buf.subarray(0, length), 'gbk')
+      const finalStr = buf.toString('utf16le', 0, len * 2)
       if (!finalStr) return true
 
       const altTabItemInfo: WindowAltTabTaskItem = {

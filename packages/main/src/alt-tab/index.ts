@@ -82,16 +82,30 @@ export const initIPC = () => {
 }
 
 /**
- * 初始化 项目中快捷键：Alt+4 切换显示/隐藏，显示时居中并聚焦
+ * 唤起主窗口：居中 + 显示 + 聚焦。快捷键与托盘共用，避免逻辑重复。
+ *
+ * 透明窗口在 Windows 上 show() 时会有一帧露出默认底色的“闪烁”。
+ * 做法：show() 前把不透明度设为 0，让那一帧发生在不可见状态，下一帧再恢复，
+ * 从而遮掉闪烁。仅在窗口此前不可见时才做这套遮帧，避免已可见时（如托盘“显示”）反而闪一下。
+ */
+export const showMainWindow = () => {
+  const wasVisible = browserWindow.isVisible()
+  if (!wasVisible) browserWindow.setOpacity(0)
+  browserWindow.center()
+  browserWindow.show()
+  browserWindow.focus()
+  if (!wasVisible) setTimeout(() => browserWindow.setOpacity(1), 32)
+}
+
+/**
+ * 初始化 项目中快捷键：Alt+4 切换显示/隐藏
  */
 export const initShortCut = () => {
   globalShortcut.register('Alt+4', () => {
     if (browserWindow.isVisible()) {
       browserWindow.hide()
     } else {
-      browserWindow.center()
-      browserWindow.show()
-      browserWindow.focus()
+      showMainWindow()
     }
   })
 }
