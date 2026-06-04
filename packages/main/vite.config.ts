@@ -25,8 +25,8 @@ export default defineConfig({
       external: [
         // Once again exclude Electron from build output.
         'electron',
-        'ffi-napi',
-        'ref-napi',
+        // koffi is a native module and must not be bundled.
+        'koffi',
         // Exclude Node builtin modules.
         ...builtinModules.flatMap((p) => [p, `node:${p}`])
       ],

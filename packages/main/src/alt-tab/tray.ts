@@ -1,23 +1,18 @@
-import { Tray, Menu, nativeImage } from 'electron'
-import path from 'node:path'
+import { app, Tray, Menu, nativeImage } from 'electron'
+import { assetPath } from '../asset'
 
 export const createTray = () => {
-  /**
-   * Q-A: 文件中的路径最后都是打包后的路径
-   *
-   */
-  const icon = nativeImage.createFromPath(path.normalize('asset/image/tools.png'))
+  // 用 assetPath 解析，开发/打包都能正确找到图标（见 asset.ts）
+  const icon = nativeImage.createFromPath(assetPath('image/app-icon.png'))
 
   const tray = new Tray(icon)
+  tray.setToolTip('AltSwitch')
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: '设置',
-      click: () => {}
-    },
-    {
       label: '关闭',
-      click: () => {}
+      // 退出整个程序。窗口只是隐藏（托盘常驻），所以必须用 app.quit() 真正退出
+      click: () => app.quit()
     }
   ])
 

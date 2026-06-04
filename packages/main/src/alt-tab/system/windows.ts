@@ -1,17 +1,9 @@
-import ref from 'ref-napi'
+import koffi from 'koffi'
 import iconv from 'iconv-lite'
-import ffi from 'ffi-napi'
-import {
-  libDwmApi,
-  libUser32Api,
-  libProcessThreadsApi,
-  windowType,
-  libPsApi
-} from '../../lib/window'
+import { libDwmApi, libUser32Api, libProcessThreadsApi, EnumWindowsProc } from '../../lib/window'
 import { WindowAltTabTaskItem } from '../type'
 
-const { Def, BOOL, HANDLE, LONG_PTR } = windowType
-const { DwmGetWindowAttribute, DwmRegisterThumbnail } = libDwmApi
+const { DwmGetWindowAttribute } = libDwmApi
 const {
   EnumWindows,
   GetShellWindow,
@@ -23,48 +15,24 @@ const {
   GetWindowTextLengthA,
   GetWindowThreadProcessId,
   ShowWindow,
-  GetDC,
-  ReleaseDC,
-  PrintWindow,
-  GetWindowRect
+  SetForegroundWindow
 } = libUser32Api
+const { OpenProcess, CloseHandle, QueryFullProcessImageNameA } = libProcessThreadsApi
 
-// Q-A: SetForegroundWindow 放到 libUser32Api 导入后 会出现中文乱码情况
-const { SetForegroundWindow } = ffi.Library('user32', {
-  SetForegroundWindow: [BOOL, [HANDLE]]
-})
-const { OpenProcess } = libProcessThreadsApi
-const { GetModuleFileNameExA } = libPsApi
-
-const _WIN64 = process.arch === 'x64'
-
+// 窗口是否被其所有者应用程序遮盖（DWMWA_CLOAKED = 14）
 const isCloakedWindow = (hwnd: number) => {
-  const buf = Buffer.alloc(200)
-  buf.type = _WIN64 ? ref.types.uint64 : ref.types.uint32
-  // 查看 窗口是否被其所有者应用程序遮盖
-  const res = DwmGetWindowAttribute(hwnd, 14, buf, 200)
-
-  let cloakedWindow = buf.deref()
-  if (res != 0) cloakedWindow = false
-
-  return cloakedWindow
+  const value: number[] = [0]
+  const hr = DwmGetWindowAttribute(hwnd, 14, value, 4)
+  if (hr !== 0) return false
+  return !!value[0]
 }
 
-const getLastVisibleActivePopUpOfWindow = (hwnd: number) => {
+const getLastVisibleActivePopUpOfWindow = (hwnd: number): number | null => {
   while (true) {
-    // 确定指定窗口拥有的弹出窗口最近处于活动状态。
-    /**
-     * 由 hWnd 标识的窗口最近处于活动状态。
-     * 由 hWnd 标识的窗口不拥有任何弹出窗口。
-     * 由 hWnd 标识的窗口不是顶级窗口，或者它由另一个窗口拥有。
-     * */
-    const h = GetLastActivePopup(hwnd)
+    // 确定指定窗口拥有的弹出窗口最近处于活动状态
+    const h: number = GetLastActivePopup(hwnd)
 
     // 确定指定窗口的可见性状态
-    // 指定的窗口、其父窗口、其父窗口等具有 WS_VISIBLE 样式，则返回值为非零。 否则返回值为零。
-    // window 父窗口 顶级窗口 关系
-    // TODO:
-    // https://blog.csdn.net/lixiang987654321/article/details/25779373
     if (IsWindowVisible(h)) {
       return h
     } else if (h === hwnd) {
@@ -76,126 +44,103 @@ const getLastVisibleActivePopUpOfWindow = (hwnd: number) => {
 }
 
 const isAltTabWindows = (hwnd: number) => {
-  // 是否是shell 桌面窗口
+  // 是否是 shell 桌面窗口
   if (GetShellWindow() === hwnd) return false
 
-  if (isCloakedWindow(hwnd)) {
-    return false
-  }
+  if (isCloakedWindow(hwnd)) return false
 
   const ex = GetWindowLongA(hwnd, -20)
-  // 去除浮动工具栏
+  // 去除浮动工具栏（WS_EX_TOOLWINDOW = 0x80）
   if (ex & 0x00000080) return false
 
-  // 检索指定窗口的上级句柄。
+  // 检索指定窗口的上级句柄
   const hRoot = GetAncestor(hwnd, 3)
   const hLast = getLastVisibleActivePopUpOfWindow(hRoot)
 
-  if (hLast != hwnd) {
-    return false
-  }
+  if (hLast !== hwnd) return false
 
   return true
 }
 
-const getProcessNameByHwnd = (pid: number, altTabItemInfo: WindowAltTabTaskItem) => {
-  const processHandle = OpenProcess(0x0400 | 0x0010, 0, pid)
-
-  const processNameBuf = Buffer.alloc(200)
-  processNameBuf.type = ref.types.uchar
-  GetModuleFileNameExA(processHandle, 0, processNameBuf, 200)
-  altTabItemInfo.processName = iconv.decode(processNameBuf, 'gbk').replace(/(\x00)*/gm, '')
+// 取窗口所属进程 PID（32 位 DWORD，用单元素数组接收 _Out_ 参数）
+const getWindowPid = (hwnd: number): number => {
+  const pidPtr: number[] = [0]
+  GetWindowThreadProcessId(hwnd, pidPtr)
+  return pidPtr[0]
 }
 
-let allAltTabProcess: Array<WindowAltTabTaskItem> = []
-const enumWindowsCallBack = ffi.Callback(BOOL, [HANDLE, LONG_PTR], (hwnd: number, IParam) => {
-  const res = isAltTabWindows(hwnd)
-  if (res) {
-    const length: number = GetWindowTextLengthA(hwnd)
+// 通过 PID 拿到对应进程的可执行文件路径
+const fillProcessName = (pid: number, altTabItemInfo: WindowAltTabTaskItem) => {
+  // PROCESS_QUERY_LIMITED_INFORMATION = 0x1000，权限要求低，覆盖更多进程
+  const processHandle = OpenProcess(0x1000, false, pid)
+  if (!processHandle) return
 
-    const buf = Buffer.alloc(length)
-    buf.type = ref.types.uchar
-    GetWindowTextA(hwnd, buf, length + 1)
-
-    const finalStr = iconv.decode(buf, 'GBK')
-    const altTabItemInfo = {
-      appTitle: finalStr,
-      appHwnd: hwnd,
-      processName: ''
+  try {
+    const nameBuf = Buffer.allocUnsafe(512)
+    const sizePtr: number[] = [512]
+    const ok = QueryFullProcessImageNameA(processHandle, 0, nameBuf, sizePtr)
+    if (ok) {
+      // size 写回实际字符数（不含结尾 \0）。用原始字节按 GBK 解码，避免 koffi 默认 UTF-8 乱码
+      altTabItemInfo.processName = iconv.decode(nameBuf.subarray(0, sizePtr[0]), 'gbk')
     }
-
-    // Q-A:  finalStr 字符串异常
-    // A: user32 导入函数的问题
-    if (finalStr) allAltTabProcess.push(altTabItemInfo)
-
-    const processIdBuf = Buffer.alloc(200)
-    processIdBuf.type = ref.types.uint16
-    GetWindowThreadProcessId(hwnd, processIdBuf)
-    // 获取hwnd的进程名字
-    getProcessNameByHwnd(processIdBuf.deref(), altTabItemInfo)
+  } finally {
+    // 关键：用完必须关闭句柄，否则每轮枚举都会泄漏句柄
+    CloseHandle(processHandle)
   }
+}
 
-  return true
-})
 /**
- * allAltTabProcess
- * EnumWindows 是个异步函数
+ * 同步枚举所有顶层窗口，筛出 alt-tab 任务。
+ *
+ * EnumWindows 是同步 API，回调在当前线程同步执行，结果可靠（不再有跨线程竞态）。
  */
-const getAllInfo = () =>
-  new Promise((res, rej) => {
-    allAltTabProcess = []
-    EnumWindows.async(enumWindowsCallBack, 0, (err) => {
-      if (err) return rej(err)
-      return res(allAltTabProcess)
-    })
+const getAllInfo = (): Promise<Array<WindowAltTabTaskItem>> => {
+  return new Promise((resolve, reject) => {
+    const result: Array<WindowAltTabTaskItem> = []
+
+    const cb = koffi.register((hwnd: number) => {
+      if (!isAltTabWindows(hwnd)) return true
+
+      const pid = getWindowPid(hwnd)
+      // 跳过本应用自身的窗口（Electron 窗口由主进程创建，PID 即 process.pid）
+      if (!pid || pid === process.pid) return true
+
+      const length = GetWindowTextLengthA(hwnd)
+      if (length <= 0) return true
+
+      // +1 给结尾的 \0 留位，避免越界写
+      const buf = Buffer.allocUnsafe(length + 1)
+      GetWindowTextA(hwnd, buf, length + 1)
+
+      // 原始字节按 GBK 解码（Win32 *A 接口在中文系统返回 GBK）
+      const finalStr = iconv.decode(buf.subarray(0, length), 'gbk')
+      if (!finalStr) return true
+
+      const altTabItemInfo: WindowAltTabTaskItem = {
+        appTitle: finalStr,
+        appHwnd: hwnd,
+        processName: ''
+      }
+      fillProcessName(pid, altTabItemInfo)
+      result.push(altTabItemInfo)
+
+      return true
+    }, koffi.pointer(EnumWindowsProc))
+
+    try {
+      EnumWindows(cb, 0)
+      resolve(result)
+    } catch (e) {
+      reject(e)
+    } finally {
+      koffi.unregister(cb)
+    }
   })
+}
 
 const toggleWindow = (appHwnd: number) => {
   ShowWindow(appHwnd, 1)
   SetForegroundWindow(appHwnd)
 }
 
-/**
- * 获取窗口缩略图
- */
-const getWindowCurrentProcessThumbnail = (hwnd: number) => {
-  // // TODO: 定义buffer的时候 该buffer该定义多大
-  // // int类型一般是4个字节 Buffer.alloc(4)
-  // const thumbBuf = Buffer.alloc(8)
-  // // TODO: thumbPtr Pointer<number> 如何在node中展示
-  // DwmRegisterThumbnail(hwnd, sourceHwnd, thumbBuf)
-  // // node-ffi 中如何定义window中系统中的类型
-  // return thumbBuf
-
-  const rect = Buffer.alloc(16)
-  GetWindowRect(hwnd, rect)
-
-  const left = rect.readInt32LE(0)
-  const top = rect.readInt32LE(4)
-  const right = rect.readInt32LE(8)
-  const bottom = rect.readInt32LE(12)
-
-  const width = right - left
-  const height = bottom - top
-
-  const hdcSrc = GetDC(hwnd)
-  const hdcDest = GetDC(0)
-
-  const bmp = Buffer.alloc(width * height * 4)
-  const result = PrintWindow(hwnd, hdcSrc, 0)
-
-  ReleaseDC(0, hdcDest)
-  ReleaseDC(hwnd, hdcSrc)
-
-  if (result) {
-    return {
-      bmp,
-      width,
-      height
-    }
-  } else {
-    throw new Error('无法获取缩略图')
-  }
-}
-
-export { getAllInfo, toggleWindow, getWindowCurrentProcessThumbnail }
+export { getAllInfo, toggleWindow }

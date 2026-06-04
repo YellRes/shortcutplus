@@ -1,69 +1,62 @@
-对系统中的快捷键提供更好的应用体验
-# alt+tab（任务切换）
+# AltSwitch
 
+> A fast, keyboard-first `Alt+Tab` replacement for Windows. A Spotlight-style window switcher that groups your open windows by app, lets you search them, and switches instantly.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[English](README.md) · [中文](README.zh-CN.md)
 
-模仿案例：[Alt Tab Terminator](https://www.ntwind.com/software/alttabter.html)
-> 目前只做了windows的版本
+<!-- TODO: add a screenshot or GIF at docs/screenshot.png; it will render here -->
+<p align="center"><img src="docs/screenshot.png" alt="AltSwitch screenshot" width="720"></p>
 
-## 特性
+## Features
 
+- **Command-palette UI** - summon a centered overlay, type to filter, navigate entirely from the keyboard.
+- **Grouped by application** - windows are grouped by their owning process so a 12-tab mess stays readable.
+- **Live thumbnails** - preview the selected window; minimized windows fall back to their last-seen frame, then to the app icon.
+- **Keyboard model** - `↑`/`↓` to move, `↵` to switch, `Esc` to dismiss, type anything to filter.
+- **Lightweight native layer** - window enumeration and switching go through Win32 via [koffi](https://koffi.dev/) (no Python / Visual C++ build toolchain needed to install).
 
+## Requirements
 
-- 技术栈：vite + vue3 + typescript + electron + ffi-napi
-- 提供了可以基于程序名称分类的任务展示
-- 可以搜索运行中的任务
-## 效果图
+- Windows 10 or 11 (x64)
 
+## Install
 
+Download the latest build from the [Releases page](https://github.com/YellRes/shortcutplus/releases):
 
-![动画.gif](https://cdn.nlark.com/yuque/0/2023/gif/394182/1677677576665-a81377f6-2329-4d59-8bd0-6fad4640f41c.gif#averageHue=%23282d35&clientId=ucca7bc89-9558-4&from=ui&id=u3673fecb&name=%E5%8A%A8%E7%94%BB.gif&originHeight=838&originWidth=1756&originalType=binary&ratio=1&rotation=0&showTitle=false&size=4824840&status=done&style=none&taskId=u4ad2cd53-ec3a-471f-bc74-fcaed19a877&title=)
-## 需要完成的功能
+- **Installer** - `AltSwitch-Setup-x.y.z.exe` (NSIS, lets you choose the install location and creates shortcuts)
+- **Portable** - `AltSwitch-x.y.z-win.zip` (unzip and run, no install)
 
+## Usage
 
+1. Press **`Alt+4`** to summon the switcher (press again to dismiss).
+2. Type to filter the open windows.
+3. Use **`↑` / `↓`** to move the selection across groups.
+4. Press **`↵`** to switch to the selected window, or click it.
+5. Press **`Esc`** (or click away) to dismiss.
 
-- [x] 获取当前系统中所有显示在alt-tab显示栏中的应用
-- [x] 获取到的任务窗口需要根据当前的所属的程序来归类
-- [x] 任务点击后能够切换
-- [x] 任务窗口获取对应的图标信息
-- [ ] 要有任务的缩略图的预览
-## 项目搭建
+## Build from source
 
+```bash
+pnpm install        # koffi ships prebuilt binaries; no Python / VC++ needed
+pnpm dev            # run in development (renderer dev server + auto-rebuilt main/preload)
+pnpm dist           # build a Windows installer + portable zip into release/
+```
 
+## Tech stack
 
-参考如下：
-1.[ts+vite 构建 electron 项目](https://blog.totominc.io/blog/electron-with-typescript-and-vite-as-a-build-system)
-## 安装使用
+- **Electron 19** + **Vue 3** + **TypeScript** + **Vite**
+- **Tailwind CSS** for the UI (no component library)
+- **koffi** for Win32 native calls; **desktopCapturer** for window thumbnails
 
+## How it works
 
+The main process enumerates true `Alt+Tab` windows with `EnumWindows` (filtering the shell window, DWM-cloaked windows, and tool windows), reads each window's title and owning process via Win32, and exposes them to the Vue UI over IPC. Switching calls `ShowWindow` + `SetForegroundWindow`. Thumbnails use Electron's `desktopCapturer`, matched to each window by its `HWND`, with a cache so minimized windows still show their last-known frame.
 
-- 获取项目代码
-> git clone [https://gitee.com/yellres/shortcutsplus.git](https://gitee.com/yellres/shortcutsplus.git)
+## Contributing
 
-- 安装依赖
-> npm i
+Issues and pull requests are welcome. This is a Windows-only project today; a cross-platform (macOS) rewrite is being explored separately. Please keep changes focused and run `pnpm dev` to verify before opening a PR.
 
-npm i 时候会安装`ffi-napi`这个包，其中`ffi-napi`依赖于`node-gyp`。其中`node-gyp`要求电脑中有`python`，`visual C++ Build Tools`等工具。
+## License
 
-- 运行项目
-> npm run dev
-
-
-### 项目中遇到的问题
-
-1. 如何获取当前系统中所有运行中的程序？
-
-electron中并没有提供直接的api调用。
-所以这里我使用`node-ffi`调用系统原生dll函数，来获取所有的进程信息。
-参考了如下： 
-
-- [stackoverflow问答：如何获取alt-tab中的应用](https://stackoverflow.com/questions/210504/enumerate-windows-like-alt-tab-does)
-- [active-win 项目 获取目前运行中的程序](https://github.com/sindresorhus/active-win)
-
-2. 系统中的icon图标，进程的预览图如何传递到渲染进程中？
-
-目前icon图标使用了`electron`中自带的 `app.getFileIcon`方法。
-当前进程的预览图暂时没有方法来获取。
-
-
-### vite 中 tailwindcss 配置失败
+[MIT](LICENSE). Inspired by [Alt Tab Terminator](https://www.ntwind.com/software/alttabter.html).

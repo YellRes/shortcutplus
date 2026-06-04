@@ -1,7 +1,16 @@
 {
-  "name": "shortcutsplus",
+  "name": "altswitch",
+  "productName": "AltSwitch",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "A fast, keyboard-first Alt+Tab replacement for Windows — a Spotlight-style window switcher.",
+  "author": "Glider",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YellRes/shortcutplus.git"
+  },
+  "homepage": "https://github.com/YellRes/shortcutplus#readme",
   "type": "module",
   "main": "dist/main/index.cjs",
   "scripts": {
@@ -12,59 +21,76 @@
     "build:main": "tsc -p packages/main/tsconfig.json --noEmit && vite build packages/main",
     "build": "npm run build:renderer && npm run build:preload && npm run build:main",
     "start": "electron .",
-    "dev": "cross-env NODE_ENV=development ts-node scripts/dev-server.ts",
-    "rebuild": "electron-rebuild ./node_modules/ffi-napi",
-    "build:addon": "node-gyp rebuild"
+    "dev": "cross-env NODE_ENV=development tsx scripts/dev-server.ts",
+    "dist": "pnpm run build && electron-builder",
+    "dist:dir": "pnpm run build && electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.altswitch.app",
+    "productName": "AltSwitch",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      "asset/**"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/koffi/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "asset/image/app-icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "dependencies": {
     "@ant-design/icons-vue": "^6.1.0",
-    "@vueuse/core": "^9.13.0",
-    "ant-design-vue": "^3.2.15",
     "iconv-lite": "^0.6.3",
-    "node-addon-api": "^6.0.0",
-    "ref-napi": "^3.0.3",
-    "ref-struct-napi": "^1.1.1",
+    "koffi": "^2.12.0",
     "vue": "^3.2.41",
     "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
-    "@types/ffi-napi": "^4.0.7",
-    "@types/ref-napi": "^3.0.6",
     "@vitejs/plugin-vue": "^3.2.0",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^11.0.0",
     "autoprefixer": "^10.4.15",
     "cross-env": "^7.0.3",
     "electron": "^19.0.0",
-    "electron-rebuild": "^3.2.9",
+    "electron-builder": "^24.13.3",
     "eslint": "^8.9.0",
     "eslint-plugin-vue": "^9.3.0",
-    "ffi-napi": "^4.0.3",
     "husky": "^7.0.0",
     "less": "^4.1.3",
     "lint-staged": "^11.2.6",
-    "node-gyp": "^9.3.1",
     "postcss": "^8.4.28",
     "prettier": "2.6.0",
     "tailwindcss": "^3.3.3",
     "terser": "^5.16.1",
-    "ts-node": "^10.9.1",
+    "tsx": "^4.19.2",
     "typescript": "^4.6.4",
-    "unplugin-vue-components": "^0.22.9",
     "vite": "^4.4.9",
     "vue-tsc": "^1.0.9"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx,json}": [
+    "packages/**/src/**/*.{js,jsx,ts,tsx,vue,json}": [
       "prettier --write",
-      "eslint --fix",
-      "git add"
+      "eslint --fix"
     ]
   }
 }

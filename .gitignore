@@ -13,6 +13,9 @@ dist-ssr
 *.local
 build/*
 
+# electron-builder 打包输出
+release
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
