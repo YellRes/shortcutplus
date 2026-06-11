@@ -1,6 +1,6 @@
 import { ipcMain, globalShortcut, desktopCapturer, type DesktopCapturerSource } from 'electron'
 import { browserWindow } from '../index'
-import { getAltTabTask, toggleThisWindows, getSelfHwnd } from './system'
+import { getAltTabTask, toggleThisWindows, getSelfHwnd, closeThisWindow } from './system'
 
 /**
  * app 和 windows 是什么关系
@@ -74,6 +74,10 @@ export const initIPC = () => {
 
   ipcMain.on('toggle-this-windows', (_event, apphwnd) => {
     toggleThisWindows(apphwnd)
+  })
+
+  ipcMain.on('close-this-window', (_event, hwnd) => {
+    closeThisWindow(hwnd)
   })
 
   ipcMain.on('hide-main-app', () => {

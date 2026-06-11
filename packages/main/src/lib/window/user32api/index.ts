@@ -24,7 +24,11 @@ const libUser32 = {
     'uint32_t __stdcall GetWindowThreadProcessId(uintptr_t hwnd, _Out_ uint32_t *pid)'
   ),
   ShowWindow: user32.func('bool __stdcall ShowWindow(uintptr_t hwnd, int cmd)'),
-  SetForegroundWindow: user32.func('bool __stdcall SetForegroundWindow(uintptr_t hwnd)')
+  SetForegroundWindow: user32.func('bool __stdcall SetForegroundWindow(uintptr_t hwnd)'),
+  // 向窗口投递消息（用于 WM_CLOSE 优雅关闭目标窗口）
+  PostMessageW: user32.func(
+    'bool __stdcall PostMessageW(uintptr_t hwnd, uint32_t msg, uintptr_t wparam, intptr_t lparam)'
+  )
 }
 
 export default libUser32

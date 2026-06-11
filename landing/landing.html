@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title data-i18n="doc_title">ShortcutPlus — 重新发明 Windows 的 Alt+Tab</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2322d3ee'/%3E%3Cstop%20offset='.55'%20stop-color='%238b5cf6'/%3E%3Cstop%20offset='1'%20stop-color='%23f472b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='url(%23g)'/%3E%3Ctext%20x='16'%20y='23'%20font-family='Arial,Helvetica,sans-serif'%20font-size='18'%20font-weight='bold'%20fill='%230a0a12'%20text-anchor='middle'%3ES%2B%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #07070c;
+    --bg-soft: #0d0e16;
+    --panel: #11131f;
+    --panel-2: #161826;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --text: #eef0f6;
+    --muted: #9aa0b4;
+    --faint: #5b6075;
+    --cyan: #22d3ee;
+    --violet: #8b5cf6;
+    --pink: #f472b6;
+    --grad: linear-gradient(120deg, #22d3ee 0%, #8b5cf6 55%, #f472b6 100%);
+    --glow-cyan: rgba(34, 211, 238, 0.35);
+    --glow-violet: rgba(139, 92, 246, 0.35);
+    --radius: 16px;
+    --maxw: 1120px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+      "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ambient background glows */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(60vw 50vh at 80% -10%, rgba(139, 92, 246, 0.18), transparent 60%),
+      radial-gradient(50vw 50vh at 0% 10%, rgba(34, 211, 238, 0.14), transparent 55%),
+      radial-gradient(70vw 60vh at 50% 110%, rgba(244, 114, 182, 0.1), transparent 60%);
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 80%);
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+  .grad-text {
+    background: var(--grad);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 26px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--grad);
+    color: #0a0a12;
+    box-shadow: 0 8px 30px -8px var(--glow-violet);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 40px -10px var(--glow-violet), 0 0 24px -6px var(--glow-cyan);
+  }
+  .btn-ghost {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .btn-ghost:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    padding: 2px 8px;
+    font-family: "SF Mono", "JetBrains Mono", Consolas, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    line-height: 1.4;
+  }
+
+  /* ---------- nav ---------- */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(14px);
+    background: rgba(7, 7, 12, 0.6);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; }
+  .logo .mark {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--grad);
+    display: grid; place-items: center;
+    font-size: 15px; color: #0a0a12; font-weight: 800;
+    box-shadow: 0 0 18px -4px var(--glow-violet);
+  }
+  .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { display: flex; align-items: center; gap: 14px; }
+  @media (max-width: 760px) { .nav-links { display: none; } }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 72px 0 56px; }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 12.5px; color: var(--muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px 1px var(--glow-cyan); }
+  h1 {
+    font-size: clamp(36px, 5.2vw, 58px);
+    line-height: 1.08;
+    letter-spacing: -1.5px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .hero-sub-en {
+    font-size: clamp(15px, 1.6vw, 19px);
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.2px;
+    margin-bottom: 22px;
+  }
+  .hero-desc { font-size: 16.5px; color: var(--muted); max-width: 520px; margin-bottom: 30px; }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .hero-hint { margin-top: 22px; font-size: 13.5px; color: var(--faint); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+    .hero { padding: 48px 0; }
+  }
+
+  /* ---------- switcher mock ---------- */
+  .switcher {
+    position: relative;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(22, 24, 38, 0.92), rgba(13, 14, 22, 0.92));
+    border: 1px solid var(--border-strong);
+    box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255,255,255,0.02) inset;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+  }
+  .switcher::before {
+    content: "";
+    position: absolute; inset: 0;
+    padding: 1px; border-radius: var(--radius);
+    background: linear-gradient(140deg, var(--glow-cyan), transparent 40%, var(--glow-violet));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0.6; pointer-events: none;
+  }
+  .sw-search {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sw-search svg { width: 18px; height: 18px; color: var(--faint); flex: none; }
+  .sw-search .q { color: var(--text); font-size: 15px; }
+  .sw-search .caret {
+    width: 2px; height: 17px; background: var(--cyan);
+    animation: blink 1.1s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .sw-body { display: grid; grid-template-columns: 1.35fr 1fr; min-height: 290px; }
+  .sw-list { padding: 10px 8px; border-right: 1px solid var(--border); overflow: hidden; }
+  .sw-group-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: var(--faint); padding: 10px 12px 6px; font-weight: 700;
+  }
+  .sw-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px; border-radius: 9px;
+    font-size: 13.5px; color: var(--muted);
+    transition: background 0.2s, color 0.2s;
+  }
+  .sw-item .ico { width: 22px; height: 22px; border-radius: 6px; flex: none; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #0a0a12; }
+  .sw-item .ttl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sw-item.active {
+    background: linear-gradient(90deg, rgba(34, 211, 238, 0.14), rgba(139, 92, 246, 0.12));
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .sw-item.active .ttl { font-weight: 600; }
+
+  .sw-preview { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .sw-thumb {
+    flex: 1; border-radius: 10px;
+    background:
+      linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(139, 92, 246, 0.14)),
+      repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 12px, transparent 12px 24px);
+    border: 1px solid var(--border);
+    display: grid; place-items: center;
+    color: var(--faint); font-size: 12px; letter-spacing: 0.5px;
+    position: relative; overflow: hidden;
+  }
+  .sw-thumb .win-bar { position: absolute; top: 0; left: 0; right: 0; height: 26px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; padding: 0 10px; }
+  .sw-thumb .win-bar i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .sw-meta { font-size: 12px; color: var(--faint); display: flex; justify-content: space-between; }
+  .sw-meta b { color: var(--muted); font-weight: 600; }
+
+  @media (max-width: 520px) { .sw-body { grid-template-columns: 1fr; } .sw-preview { display: none; } }
+
+  /* ---------- sections ---------- */
+  section.block { padding: 80px 0; }
+  .sec-head { text-align: center; max-width: 680px; margin: 0 auto 52px; }
+  .sec-tag {
+    font-size: 12.5px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 14px;
+  }
+  .sec-head h2 { font-size: clamp(26px, 3.4vw, 38px); letter-spacing: -0.8px; line-height: 1.15; margin-bottom: 12px; }
+  .sec-head .en { font-size: 15px; color: var(--faint); font-weight: 500; }
+  .sec-head p { color: var(--muted); font-size: 16px; margin-top: 14px; }
+
+  /* ---------- pain compare ---------- */
+  .compare { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; align-items: stretch; }
+  .compare .col {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 30px 28px;
+    background: var(--panel);
+  }
+  .compare .col.bad { background: rgba(244, 114, 182, 0.04); }
+  .compare .col.good {
+    background: linear-gradient(180deg, rgba(34,211,238,0.06), rgba(139,92,246,0.05));
+    border-color: var(--border-strong);
+    box-shadow: 0 20px 60px -30px var(--glow-violet);
+  }
+  .compare h3 { font-size: 18px; margin-bottom: 4px; }
+  .compare .col .en { font-size: 12.5px; color: var(--faint); margin-bottom: 20px; }
+  .compare ul { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+  .compare li { display: flex; gap: 11px; font-size: 14.5px; color: var(--muted); }
+  .compare li .ic { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; margin-top: 2px; }
+  .compare .bad .ic { background: rgba(244,114,182,0.16); color: #f472b6; }
+  .compare .good .ic { background: rgba(34,211,238,0.18); color: #22d3ee; }
+  .compare .good li { color: var(--text); }
+  .vs { display: grid; place-items: center; padding: 0 22px; }
+  .vs span { font-size: 13px; font-weight: 800; color: var(--faint); letter-spacing: 1px; padding: 10px; }
+  @media (max-width: 820px) {
+    .compare { grid-template-columns: 1fr; gap: 16px; }
+    .vs { padding: 4px 0; }
+  }
+
+  /* ---------- feature grid ---------- */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card {
+    position: relative;
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s;
+    overflow: hidden;
+  }
+  .card:hover { transform: translateY(-4px); border-color: var(--border-strong); background: var(--panel-2); }
+  .card .glow {
+    position: absolute; width: 120px; height: 120px; border-radius: 50%;
+    top: -40px; right: -40px; filter: blur(40px); opacity: 0.5;
+    background: var(--grad);
+    transition: opacity 0.3s;
+  }
+  .card:hover .glow { opacity: 0.85; }
+  .card .ic-box {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: grid; place-items: center; margin-bottom: 18px;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    position: relative;
+  }
+  .card .ic-box svg { width: 24px; height: 24px; }
+  .card h3 { font-size: 17px; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .card .en { font-size: 12px; color: var(--faint); margin-bottom: 12px; font-weight: 500; }
+  .card p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+  @media (max-width: 860px) { .features { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .features { grid-template-columns: 1fr; } }
+
+  /* ---------- keyboard model ---------- */
+  .keymodel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .keystep {
+    text-align: center; padding: 30px 18px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--panel);
+  }
+  .keystep .keys { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; min-height: 30px; align-items: center; }
+  .keystep .keys .kbd { font-size: 13px; padding: 5px 10px; min-width: 30px; }
+  .keystep h4 { font-size: 15px; margin-bottom: 4px; }
+  .keystep .en { font-size: 11.5px; color: var(--faint); margin-bottom: 8px; }
+  .keystep p { font-size: 13px; color: var(--muted); }
+  @media (max-width: 820px) { .keymodel { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- tech ---------- */
+  .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .tech-item {
+    display: flex; gap: 16px; padding: 22px 24px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--panel);
+  }
+  .tech-item .num { font-family: "JetBrains Mono", Consolas, monospace; font-size: 14px; font-weight: 700; color: var(--cyan); flex: none; padding-top: 2px; }
+  .tech-item h4 { font-size: 15.5px; margin-bottom: 5px; }
+  .tech-item p { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+  .tech-item code { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12.5px; color: var(--pink); background: rgba(244,114,182,0.08); padding: 1px 6px; border-radius: 5px; }
+  @media (max-width: 720px) { .tech-grid { grid-template-columns: 1fr; } }
+
+  /* ---------- final CTA ---------- */
+  .final {
+    text-align: center;
+    border-radius: 24px;
+    padding: 64px 32px;
+    background: linear-gradient(160deg, rgba(34,211,238,0.08), rgba(139,92,246,0.1) 60%, rgba(244,114,182,0.07));
+    border: 1px solid var(--border-strong);
+    position: relative; overflow: hidden;
+  }
+  .final h2 { font-size: clamp(28px, 4vw, 42px); letter-spacing: -1px; margin-bottom: 10px; }
+  .final .en { color: var(--muted); font-size: 16px; margin-bottom: 28px; }
+  .final .hero-actions { justify-content: center; }
+  .final .meta { margin-top: 24px; font-size: 13px; color: var(--faint); }
+
+  /* ---------- footer ---------- */
+  footer { border-top: 1px solid var(--border); padding: 40px 0 56px; margin-top: 80px; }
+  footer .wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  footer .muted { color: var(--faint); font-size: 13px; }
+  footer .links { display: flex; gap: 22px; font-size: 13.5px; color: var(--muted); }
+  footer .links a:hover { color: var(--text); }
+
+  /* ---------- language toggle ---------- */
+  .lang-toggle {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 7px 12px; border-radius: 10px;
+    font-family: inherit; font-size: 13px; cursor: pointer;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-strong);
+  }
+  .lang-toggle:hover { background: rgba(255, 255, 255, 0.08); }
+  .lang-toggle b { font-weight: 700; color: var(--faint); transition: color 0.2s; }
+  body.lang-zh .lang-toggle .z, body.lang-en .lang-toggle .e { color: var(--text); }
+  /* In EN mode the heading itself is English, so hide the small English accent labels */
+  body.lang-en .en { display: none; }
+
+  /* ---------- reveal animation ---------- */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .sw-search .caret { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+<noscript>
+  <!-- JS disabled: scroll-reveal can't run, so show all content immediately -->
+  <style>.reveal { opacity: 1 !important; transform: none !important; }</style>
+</noscript>
+</head>
+<body class="lang-zh">
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="wrap">
+    <div class="logo">
+      <span class="mark">S+</span>
+      <span>ShortcutPlus</span>
+    </div>
+    <div class="nav-links">
+      <a href="#features" data-i18n="nav_features">功能</a>
+      <a href="#keyboard" data-i18n="nav_shortcuts">快捷键</a>
+      <a href="#tech" data-i18n="nav_tech">技术</a>
+    </div>
+    <div class="nav-cta">
+      <button class="lang-toggle" id="langToggle" type="button" aria-label="Switch language / 切换语言"><b class="z">中</b><span style="color:var(--faint)">/</span><b class="e">EN</b></button>
+      <a href="https://github.com/YellRes/shortcutplus/releases/tag/v0.0.1" target="_blank" rel="noopener" class="btn btn-primary" style="padding:9px 18px;font-size:14px;" data-i18n="nav_download">免费下载</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="badge"><span class="dot"></span><span data-i18n="hero_badge">Windows 10 / 11 · 原生极速</span></span>
+      <h1 data-i18n="hero_h1">重新发明 Windows 的 <span class="grad-text">Alt + Tab</span></h1>
+      <div class="hero-sub-en" data-i18n="hero_sub">Reinvent your task switcher.</div>
+      <p class="hero-desc" data-i18n="hero_desc">
+        即输即搜、按进程智能分组、纯键盘操控的窗口切换器。告别一长串挤在一起的缩略图——
+        按 <span class="kbd">Alt</span> + <span class="kbd">4</span> 唤起，输入即定位，回车即切换。
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/YellRes/shortcutplus/releases/tag/v0.0.1" target="_blank" rel="noopener" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+          <span data-i18n="hero_btn_dl">下载 for Windows</span>
+        </a>
+        <a href="#features" class="btn btn-ghost" data-i18n="hero_btn_learn">了解功能</a>
+      </div>
+      <div class="hero-hint" data-i18n="hero_hint">
+        <span>全局唤起</span>
+        <span class="kbd">Alt</span><span style="color:var(--faint)">+</span><span class="kbd">4</span>
+        <span style="color:var(--border-strong)">·</span>
+        <span>无需鼠标 · Keyboard-first</span>
+      </div>
+    </div>
+
+    <!-- switcher mock -->
+    <div class="reveal switcher" id="switcher" aria-hidden="true">
+      <div class="sw-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <span class="q" id="sw-query">code</span>
+        <span class="caret"></span>
+      </div>
+      <div class="sw-body">
+        <div class="sw-list" id="sw-list"><!-- injected by JS --></div>
+        <div class="sw-preview">
+          <div class="sw-thumb">
+            <div class="win-bar"><i style="background:#f472b6"></i><i style="background:#fbbf24"></i><i style="background:#34d399"></i></div>
+            <span id="sw-preview-label">实时缩略图预览</span>
+          </div>
+          <div class="sw-meta"><span id="sw-proc">Code.exe</span><span><b>↵</b> <span data-i18n="sw_switch">切换</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PAIN / COMPARE ===== -->
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Why ShortcutPlus</div>
+      <h2 data-i18n="why_h2">系统自带的 Alt+Tab，<br />在窗口多了之后就不够用了</h2>
+      <div class="en">The native switcher breaks down when you have dozens of windows open.</div>
+    </div>
+    <div class="compare">
+      <div class="col bad reveal">
+        <h3 data-i18n="cmp_bad_title">原生 Alt + Tab</h3>
+        <div class="en">Windows default</div>
+        <ul>
+          <li><span class="ic">✕</span><span data-i18n="cmp_bad_1">窗口一多就是一长排缩略图，靠数缩略图找目标</span></li>
+          <li><span class="ic">✕</span><span data-i18n="cmp_bad_2">不能搜索，找不到只能反复 Tab</span></li>
+          <li><span class="ic">✕</span><span data-i18n="cmp_bad_3">同一程序的多个窗口混杂，没有分组</span></li>
+          <li><span class="ic">✕</span><span data-i18n="cmp_bad_4">必须按住 Alt，松手就消失</span></li>
+        </ul>
+      </div>
+      <div class="vs"><span>VS</span></div>
+      <div class="col good reveal">
+        <h3>ShortcutPlus</h3>
+        <div class="en">Command-palette switcher</div>
+        <ul>
+          <li><span class="ic">✓</span><span data-i18n="cmp_good_1">Spotlight 式命令面板，输入关键词即时筛选</span></li>
+          <li><span class="ic">✓</span><span data-i18n="cmp_good_2">按所属进程自动分组，结构一目了然</span></li>
+          <li><span class="ic">✓</span><span data-i18n="cmp_good_3">↑↓ 跨组导航、回车切换、Esc 关闭，纯键盘</span></li>
+          <li><span class="ic">✓</span><span data-i18n="cmp_good_4">选中窗口实时缩略图预览，确认无误再切</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="block" id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Features</div>
+      <h2 data-i18n="feat_h2">为「快」而生的每一个细节</h2>
+      <div class="en">Built for speed, from enumeration to keystroke.</div>
+    </div>
+    <div class="features">
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div>
+        <h3 data-i18n="feat1_t">即输即搜</h3>
+        <div class="en">Type to filter</div>
+        <p data-i18n="feat1_p">打开面板直接输入，窗口标题与程序名实时匹配，目标一键命中，不再靠肉眼数缩略图。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <h3 data-i18n="feat2_t">按进程智能分组</h3>
+        <div class="en">Grouped by process</div>
+        <p data-i18n="feat2_p">同一程序的所有窗口自动归到一组，浏览器、IDE、聊天工具各就各位，结构清晰。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M7 14h10"/></svg></div>
+        <h3 data-i18n="feat3_t">纯键盘导航</h3>
+        <div class="en">Keyboard-first</div>
+        <p data-i18n="feat3_p"><span class="kbd">↑</span><span class="kbd">↓</span> 跨组移动、<span class="kbd">↵</span> 切换、<span class="kbd">Esc</span> 关闭。扁平导航顺序与视觉分组解耦，手不离键盘。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 21h8"/></svg></div>
+        <h3 data-i18n="feat4_t">实时缩略图预览</h3>
+        <div class="en">Live thumbnails</div>
+        <p data-i18n="feat4_p">选中窗口右侧即时呈现画面预览（基于 desktopCapturer 按窗口句柄匹配），切换前心里有数。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M13 2L4.5 12.5h6L9 22l8.5-10.5h-6L13 2z"/></svg></div>
+        <h3 data-i18n="feat5_t">全局快捷键唤起</h3>
+        <div class="en">Global hotkey</div>
+        <p data-i18n="feat5_p">任意场景按 <span class="kbd">Alt</span>+<span class="kbd">4</span> 立即唤起，居中浮现、自动聚焦；失焦自动隐藏，不打扰。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg></div>
+        <h3 data-i18n="feat6_t">零延迟枚举</h3>
+        <div class="en">Zero-lag</div>
+        <p data-i18n="feat6_p">同步枚举所有窗口、无异步竞态；原生 FFI 直连 Win32 API，唤起即就绪，没有转圈等待。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== KEYBOARD MODEL ===== -->
+<section class="block" id="keyboard">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Keyboard Model</div>
+      <h2 data-i18n="kb_h2">四个按键，掌握全部操作</h2>
+      <div class="en">Four keys. That's the whole thing.</div>
+    </div>
+    <div class="keymodel">
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd">Alt</span><span style="color:var(--faint)">+</span><span class="kbd">4</span></div>
+        <h4 data-i18n="kb1_t">唤起</h4>
+        <div class="en">Summon</div>
+        <p data-i18n="kb1_p">面板居中浮现并聚焦</p>
+      </div>
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd" style="min-width:auto">Aa</span></div>
+        <h4 data-i18n="kb2_t">输入筛选</h4>
+        <div class="en">Type to filter</div>
+        <p data-i18n="kb2_p">实时匹配标题与程序名</p>
+      </div>
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd">↑</span><span class="kbd">↓</span></div>
+        <h4 data-i18n="kb3_t">跨组移动</h4>
+        <div class="en">Navigate</div>
+        <p data-i18n="kb3_p">扁平列表流畅穿梭各分组</p>
+      </div>
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd">↵</span><span style="color:var(--faint)">/</span><span class="kbd">Esc</span></div>
+        <h4 data-i18n="kb4_t">切换 / 关闭</h4>
+        <div class="en">Switch / Dismiss</div>
+        <p data-i18n="kb4_p">回车切到目标，Esc 隐藏</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TECH ===== -->
+<section class="block" id="tech">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Under the Hood</div>
+      <h2 data-i18n="tech_h2">工程师能欣赏的实现</h2>
+      <div class="en">The engineering behind the speed.</div>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-item reveal">
+        <span class="num">01</span>
+        <div>
+          <h4 data-i18n="tech1_t">原生 FFI 直连 Win32</h4>
+          <p data-i18n="tech1_p">通过 <code>koffi</code> 现代 C FFI 直接调用 user32 / dwmapi 等系统 DLL，N-API 跨 Electron 版本 ABI 稳定，无需编译工具链。</p>
+        </div>
+      </div>
+      <div class="tech-item reveal">
+        <span class="num">02</span>
+        <div>
+          <h4 data-i18n="tech2_t">同步枚举，无竞态</h4>
+          <p data-i18n="tech2_p"><code>EnumWindows</code> 配合注册回调同步构建窗口列表，过滤 DWM 隐藏窗口、工具窗口，解析末级弹窗祖先链——一次拿到真实 Alt+Tab 窗口。</p>
+        </div>
+      </div>
+      <div class="tech-item reveal">
+        <span class="num">03</span>
+        <div>
+          <h4 data-i18n="tech3_t">中文标题精准解码</h4>
+          <p data-i18n="tech3_p">Win32 <code>*A</code> 接口在中文系统返回 GBK，读取原始字节后用 <code>iconv-lite</code> 解码，标题与进程名永不乱码。</p>
+        </div>
+      </div>
+      <div class="tech-item reveal">
+        <span class="num">04</span>
+        <div>
+          <h4 data-i18n="tech4_t">轻量现代技术栈</h4>
+          <p data-i18n="tech4_p"><code>Electron 19</code> + <code>Vue 3</code> + <code>TypeScript</code> + <code>Vite</code>。无边框透明置顶覆盖层，进程图标按 exe 路径缓存，并行拉取互不阻塞。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="block" id="download">
+  <div class="wrap">
+    <div class="final reveal">
+      <h2 data-i18n="final_h2">让切换窗口，<span class="grad-text">快到无感</span></h2>
+      <div class="en">Switching windows should feel instant.</div>
+      <div class="hero-actions">
+        <a href="https://github.com/YellRes/shortcutplus/releases/tag/v0.0.1" target="_blank" rel="noopener" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+          <span data-i18n="final_btn_dl">免费下载 ShortcutPlus</span>
+        </a>
+        <a href="#features" class="btn btn-ghost" data-i18n="final_btn_learn">查看全部功能</a>
+      </div>
+      <div class="meta" data-i18n="final_meta">支持 Windows 10 / 11 · 免费 · 唤起快捷键 Alt + 4</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="logo">
+      <span class="mark">S+</span>
+      <span>ShortcutPlus</span>
+    </div>
+    <div class="links">
+      <a href="#features" data-i18n="nav_features">功能</a>
+      <a href="#keyboard" data-i18n="nav_shortcuts">快捷键</a>
+      <a href="#tech" data-i18n="nav_tech">技术</a>
+    </div>
+    <div class="muted">© 2026 ShortcutPlus · Windows-only</div>
+  </div>
+</footer>
+
+<script>
+  // ---- Hero switcher mock: render grouped list + cycling highlight ----
+  (function () {
+    var groups = [
+      { proc: "Code.exe", tag: "VS", color: "linear-gradient(135deg,#22d3ee,#3b82f6)", items: ["index.vue — shortcutplus", "windows.ts — alt-tab"] },
+      { proc: "Chrome.exe", tag: "Ch", color: "linear-gradient(135deg,#f472b6,#fb923c)", items: ["ShortcutPlus 落地页", "MDN — EnumWindows"] },
+      { proc: "Terminal.exe", tag: ">_", color: "linear-gradient(135deg,#8b5cf6,#6366f1)", items: ["npm run dev"] }
+    ];
+
+    var list = document.getElementById("sw-list");
+    var flat = [];
+    if (list) {
+      groups.forEach(function (g) {
+        var label = document.createElement("div");
+        label.className = "sw-group-label";
+        label.textContent = g.proc;
+        list.appendChild(label);
+        g.items.forEach(function (title) {
+          var el = document.createElement("div");
+          el.className = "sw-item";
+          el.innerHTML = '<span class="ico" style="background:' + g.color + '">' + g.tag + '</span><span class="ttl">' + title + "</span>";
+          list.appendChild(el);
+          flat.push({ el: el, title: title, proc: g.proc });
+        });
+      });
+
+      var idx = 0;
+      var procEl = document.getElementById("sw-proc");
+      var labelEl = document.getElementById("sw-preview-label");
+      function highlight(i) {
+        flat.forEach(function (f, k) { f.el.classList.toggle("active", k === i); });
+        if (procEl) procEl.textContent = flat[i].proc;
+        if (labelEl) labelEl.textContent = flat[i].title;
+      }
+      highlight(0);
+
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!reduce) {
+        setInterval(function () {
+          idx = (idx + 1) % flat.length;
+          highlight(idx);
+        }, 1800);
+      }
+    }
+  })();
+
+  // ---- Scroll reveal ----
+  (function () {
+    var els = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window)) {
+      els.forEach(function (e) { e.classList.add("in"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+
+  // ---- i18n: 中 / EN language toggle ----
+  (function () {
+    var I18N = {
+      nav_features:   { zh: "功能", en: "Features" },
+      nav_shortcuts:  { zh: "快捷键", en: "Shortcuts" },
+      nav_tech:       { zh: "技术", en: "Tech" },
+      nav_download:   { zh: "免费下载", en: "Download" },
+
+      hero_badge:     { zh: "Windows 10 / 11 · 原生极速", en: "Windows 10 / 11 · Native speed" },
+      hero_h1:        { zh: '重新发明 Windows 的 <span class="grad-text">Alt + Tab</span>', en: 'Reinvent your <span class="grad-text">Alt + Tab</span>' },
+      hero_sub:       { zh: "Reinvent your task switcher.", en: "The fastest way to switch windows on Windows." },
+      hero_desc:      { zh: '即输即搜、按进程智能分组、纯键盘操控的窗口切换器。告别一长串挤在一起的缩略图——按 <span class="kbd">Alt</span> + <span class="kbd">4</span> 唤起，输入即定位，回车即切换。', en: 'A search-as-you-type, process-grouped, fully keyboard-driven window switcher. No more squinting at a row of crammed thumbnails — press <span class="kbd">Alt</span> + <span class="kbd">4</span> to summon, type to locate, Enter to switch.' },
+      hero_btn_dl:    { zh: "下载 for Windows", en: "Download for Windows" },
+      hero_btn_learn: { zh: "了解功能", en: "See features" },
+      hero_hint:      { zh: '<span>全局唤起</span> <span class="kbd">Alt</span><span style="color:var(--faint)">+</span><span class="kbd">4</span> <span style="color:var(--border-strong)">·</span> <span>无需鼠标 · Keyboard-first</span>', en: '<span>Summon anywhere</span> <span class="kbd">Alt</span><span style="color:var(--faint)">+</span><span class="kbd">4</span> <span style="color:var(--border-strong)">·</span> <span>No mouse needed · Keyboard-first</span>' },
+      sw_switch:      { zh: "切换", en: "Switch" },
+
+      why_h2:         { zh: "系统自带的 Alt+Tab，<br />在窗口多了之后就不够用了", en: "The built-in Alt+Tab falls short<br />once you have dozens of windows" },
+      cmp_bad_title:  { zh: "原生 Alt + Tab", en: "Native Alt + Tab" },
+      cmp_bad_1:      { zh: "窗口一多就是一长排缩略图，靠数缩略图找目标", en: "With many windows it is one long strip of thumbnails — you find targets by counting" },
+      cmp_bad_2:      { zh: "不能搜索，找不到只能反复 Tab", en: "No search; if you cannot spot it, you Tab over and over" },
+      cmp_bad_3:      { zh: "同一程序的多个窗口混杂，没有分组", en: "Multiple windows of one app are jumbled together, no grouping" },
+      cmp_bad_4:      { zh: "必须按住 Alt，松手就消失", en: "You must hold Alt down — release it and it vanishes" },
+      cmp_good_1:     { zh: "Spotlight 式命令面板，输入关键词即时筛选", en: "A Spotlight-style command palette — type a keyword to filter instantly" },
+      cmp_good_2:     { zh: "按所属进程自动分组，结构一目了然", en: "Auto-grouped by owning process — structure clear at a glance" },
+      cmp_good_3:     { zh: "↑↓ 跨组导航、回车切换、Esc 关闭，纯键盘", en: "↑↓ to navigate groups, Enter to switch, Esc to close — all keyboard" },
+      cmp_good_4:     { zh: "选中窗口实时缩略图预览，确认无误再切", en: "Live thumbnail of the selected window — confirm before you switch" },
+
+      feat_h2:        { zh: "为「快」而生的每一个细节", en: "Every detail built for speed" },
+      feat1_t:        { zh: "即输即搜", en: "Type to filter" },
+      feat1_p:        { zh: "打开面板直接输入，窗口标题与程序名实时匹配，目标一键命中，不再靠肉眼数缩略图。", en: "Open the palette and just type. Titles and process names match in real time — hit your target at once, no more eyeballing thumbnails." },
+      feat2_t:        { zh: "按进程智能分组", en: "Grouped by process" },
+      feat2_p:        { zh: "同一程序的所有窗口自动归到一组，浏览器、IDE、聊天工具各就各位，结构清晰。", en: "Every window of an app is grouped automatically — browser, IDE, chat tools each in place, neatly structured." },
+      feat3_t:        { zh: "纯键盘导航", en: "Keyboard-first navigation" },
+      feat3_p:        { zh: '<span class="kbd">↑</span><span class="kbd">↓</span> 跨组移动、<span class="kbd">↵</span> 切换、<span class="kbd">Esc</span> 关闭。扁平导航顺序与视觉分组解耦，手不离键盘。', en: '<span class="kbd">↑</span><span class="kbd">↓</span> to move across groups, <span class="kbd">↵</span> to switch, <span class="kbd">Esc</span> to close. A flat nav order is decoupled from the visual grouping — hands never leave the keyboard.' },
+      feat4_t:        { zh: "实时缩略图预览", en: "Live thumbnail preview" },
+      feat4_p:        { zh: "选中窗口右侧即时呈现画面预览（基于 desktopCapturer 按窗口句柄匹配），切换前心里有数。", en: "The selected window previews instantly on the right (via desktopCapturer, matched by window handle) — know what you are switching to." },
+      feat5_t:        { zh: "全局快捷键唤起", en: "Global hotkey" },
+      feat5_p:        { zh: '任意场景按 <span class="kbd">Alt</span>+<span class="kbd">4</span> 立即唤起，居中浮现、自动聚焦；失焦自动隐藏，不打扰。', en: 'Press <span class="kbd">Alt</span>+<span class="kbd">4</span> anywhere to summon it instantly — centered and auto-focused; it hides on blur, never in the way.' },
+      feat6_t:        { zh: "零延迟枚举", en: "Zero-lag enumeration" },
+      feat6_p:        { zh: "同步枚举所有窗口、无异步竞态；原生 FFI 直连 Win32 API，唤起即就绪，没有转圈等待。", en: "All windows enumerated synchronously, no async races; native FFI talks straight to the Win32 API — ready the moment you summon, no spinner." },
+
+      kb_h2:          { zh: "四个按键，掌握全部操作", en: "Four keys to master it all" },
+      kb1_t:          { zh: "唤起", en: "Summon" },
+      kb1_p:          { zh: "面板居中浮现并聚焦", en: "The palette appears centered and focused" },
+      kb2_t:          { zh: "输入筛选", en: "Type to filter" },
+      kb2_p:          { zh: "实时匹配标题与程序名", en: "Matches titles and process names live" },
+      kb3_t:          { zh: "跨组移动", en: "Navigate" },
+      kb3_p:          { zh: "扁平列表流畅穿梭各分组", en: "Glide across groups in a flat list" },
+      kb4_t:          { zh: "切换 / 关闭", en: "Switch / Close" },
+      kb4_p:          { zh: "回车切到目标，Esc 隐藏", en: "Enter switches to the target, Esc hides" },
+
+      tech_h2:        { zh: "工程师能欣赏的实现", en: "Engineering you can appreciate" },
+      tech1_t:        { zh: "原生 FFI 直连 Win32", en: "Native FFI straight to Win32" },
+      tech1_p:        { zh: "通过 <code>koffi</code> 现代 C FFI 直接调用 user32 / dwmapi 等系统 DLL，N-API 跨 Electron 版本 ABI 稳定，无需编译工具链。", en: "Calls system DLLs like user32 / dwmapi directly via the <code>koffi</code> modern C FFI. N-API stays ABI-stable across Electron versions — no build toolchain needed." },
+      tech2_t:        { zh: "同步枚举，无竞态", en: "Synchronous enumeration, no races" },
+      tech2_p:        { zh: "<code>EnumWindows</code> 配合注册回调同步构建窗口列表，过滤 DWM 隐藏窗口、工具窗口，解析末级弹窗祖先链——一次拿到真实 Alt+Tab 窗口。", en: "<code>EnumWindows</code> builds the list synchronously with a registered callback, filtering DWM-cloaked and tool windows and resolving the last-active-popup ancestor chain — real Alt+Tab windows in one pass." },
+      tech3_t:        { zh: "中文标题精准解码", en: "Accurate CJK title decoding" },
+      tech3_p:        { zh: "Win32 <code>*A</code> 接口在中文系统返回 GBK，读取原始字节后用 <code>iconv-lite</code> 解码，标题与进程名永不乱码。", en: "Win32 <code>*A</code> APIs return GBK on Chinese systems; we read the raw bytes and decode with <code>iconv-lite</code>, so titles and process names never garble." },
+      tech4_t:        { zh: "轻量现代技术栈", en: "Lightweight modern stack" },
+      tech4_p:        { zh: "<code>Electron 19</code> + <code>Vue 3</code> + <code>TypeScript</code> + <code>Vite</code>。无边框透明置顶覆盖层，进程图标按 exe 路径缓存，并行拉取互不阻塞。", en: "<code>Electron 19</code> + <code>Vue 3</code> + <code>TypeScript</code> + <code>Vite</code>. A frameless, transparent, always-on-top overlay; process icons cached by exe path and fetched in parallel." },
+
+      final_h2:       { zh: '让切换窗口，<span class="grad-text">快到无感</span>', en: 'Make switching windows <span class="grad-text">feel instant</span>' },
+      final_btn_dl:   { zh: "免费下载 ShortcutPlus", en: "Download ShortcutPlus free" },
+      final_btn_learn:{ zh: "查看全部功能", en: "See all features" },
+      final_meta:     { zh: "支持 Windows 10 / 11 · 免费 · 唤起快捷键 Alt + 4", en: "Windows 10 / 11 · Free · Summon with Alt + 4" },
+
+      doc_title:      { zh: "ShortcutPlus — 重新发明 Windows 的 Alt+Tab", en: "ShortcutPlus — Reinvent your Alt+Tab" }
+    };
+
+    function setLang(lang) {
+      var b = document.body;
+      b.classList.remove("lang-zh", "lang-en");
+      b.classList.add("lang-" + lang);
+      document.documentElement.lang = lang === "en" ? "en" : "zh-CN";
+      document.querySelectorAll("[data-i18n]").forEach(function (el) {
+        var t = I18N[el.getAttribute("data-i18n")];
+        if (t && t[lang] != null) el.innerHTML = t[lang];
+      });
+      try { localStorage.setItem("sp_lang", lang); } catch (e) {}
+    }
+
+    // First visit: follow the browser language (Chinese → zh, otherwise en).
+    // After the user manually toggles, the stored choice wins.
+    var stored = null;
+    try { stored = localStorage.getItem("sp_lang"); } catch (e) {}
+    var initial;
+    if (stored === "zh" || stored === "en") {
+      initial = stored;
+    } else {
+      var nav = (navigator.language || navigator.userLanguage || "").toLowerCase();
+      initial = nav.indexOf("zh") === 0 ? "zh" : "en";
+    }
+    setLang(initial);
+
+    var btn = document.getElementById("langToggle");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        setLang(document.body.classList.contains("lang-en") ? "zh" : "en");
+      });
+    }
+  })();
+</script>
+</body>
+</html>

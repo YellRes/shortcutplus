@@ -31,9 +31,16 @@
     "directories": {
       "output": "release"
     },
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US",
+      "zh-CN"
+    ],
     "files": [
       "dist/**/*",
-      "package.json"
+      "!dist/**/*.map",
+      "package.json",
+      "!node_modules/koffi/build/koffi/!(win32_x64)/**"
     ],
     "extraResources": [
       "asset/**"

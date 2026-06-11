@@ -13,7 +13,8 @@ const {
   GetWindowTextW,
   GetWindowThreadProcessId,
   ShowWindow,
-  SetForegroundWindow
+  SetForegroundWindow,
+  PostMessageW
 } = libUser32Api
 const { OpenProcess, CloseHandle, QueryFullProcessImageNameW } = libProcessThreadsApi
 
@@ -141,4 +142,11 @@ const toggleWindow = (appHwnd: number) => {
   SetForegroundWindow(appHwnd)
 }
 
-export { getAllInfo, toggleWindow }
+// 优雅关闭目标窗口：投递 WM_CLOSE（等同点窗口的 ✕，触发应用自身的保存提示等），
+// 不强杀进程。若是该进程最后一个窗口，进程会自然退出。
+const WM_CLOSE = 0x0010
+const closeWindow = (appHwnd: number) => {
+  PostMessageW(appHwnd, WM_CLOSE, 0, 0)
+}
+
+export { getAllInfo, toggleWindow, closeWindow }

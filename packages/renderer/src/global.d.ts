@@ -6,6 +6,7 @@ declare global {
       openUrl: (url: string) => void
       getAllAltTabTask: () => Promise<WindowAltTabTaskItem[]>
       toggleThisWindows: (appHwnd: number) => void
+      closeWindow: (hwnd: number) => void
       getCurrentHwnd: () => Promise<unknown>
       getAppThumbnail: (hwnd: number) => Promise<string>
       hideMainApp: () => void

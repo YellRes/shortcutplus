@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
-  import { SearchOutlined } from '@ant-design/icons-vue'
+  import { SearchOutlined, CloseOutlined } from '@ant-design/icons-vue'
 
   const inputVal = ref<string>('')
   const allTabsArr = ref<WindowAltTabTaskItem[]>([])
@@ -113,6 +113,16 @@
     window.api.hideMainApp()
   }
 
+  /**
+   * 关闭目标窗口（WM_CLOSE，优雅关闭）。乐观地先从本地列表移除做即时反馈，
+   * 由于 WM_CLOSE 是异步的，稍后重新拉取列表对账。
+   */
+  const closeWindow = (item: WindowAltTabTaskItem) => {
+    window.api.closeWindow(item.appHwnd)
+    allTabsArr.value = allTabsArr.value.filter((t) => t.appHwnd !== item.appHwnd)
+    setTimeout(getAllTabs, 300)
+  }
+
   // 键盘模型：↑↓ 选择 · ↵ 切换 · Esc 关闭（输入框常驻聚焦，方向键需阻止默认行为）
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
@@ -173,11 +183,12 @@
             <div class="px-4 pb-1 pt-3 font-mono text-[11px] uppercase tracking-wider text-zinc-500">
               {{ exeName(proc) }}
             </div>
-            <button
+            <div
               v-for="item in items"
               :key="item.appHwnd"
+              role="button"
               :data-selected="indexOfItem(item) === selectedIndex"
-              class="flex w-full items-center gap-3 border-l-2 px-4 py-2 text-left text-sm transition-colors"
+              class="group flex w-full cursor-pointer items-center gap-3 border-l-2 px-4 py-2 text-left text-sm transition-colors"
               :class="
                 indexOfItem(item) === selectedIndex
                   ? 'border-blue-400 bg-blue-500/15 text-white'
@@ -194,7 +205,17 @@
               />
               <span v-else class="h-5 w-5 flex-shrink-0 rounded-[4px] bg-white/10" />
               <span class="truncate">{{ item.appTitle }}</span>
-            </button>
+
+              <!-- 关闭目标窗口；@click.stop 防止冒泡触发上面的切换 -->
+              <button
+                class="ml-auto flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-zinc-400 opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100"
+                :class="{ 'opacity-100': indexOfItem(item) === selectedIndex }"
+                title="关闭该窗口"
+                @click.stop="closeWindow(item)"
+              >
+                <close-outlined />
+              </button>
+            </div>
           </template>
         </div>
       </div>

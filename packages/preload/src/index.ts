@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   openUrl: (url: string) => shell.openExternal(url),
   getAllAltTabTask: () => ipcRenderer.invoke('get-altTab-task'),
   toggleThisWindows: (appHwnd: number) => ipcRenderer.send('toggle-this-windows', appHwnd),
+  closeWindow: (hwnd: number) => ipcRenderer.send('close-this-window', hwnd),
   getCurrentHwnd: () => ipcRenderer.invoke('get-current-hwnd'),
   // 统一为 invoke/handle，与主进程 handler 协议一致（之前用 send 拿不到返回值）
   getAppThumbnail: (hwnd: number): Promise<string> => ipcRenderer.invoke('get-app-thumbnail', hwnd),

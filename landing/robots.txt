@@ -1,0 +1,24 @@
+# ShortcutPlus — allow all crawlers, including AI / generative engines (GEO)
+User-agent: *
+Allow: /
+
+# Explicitly welcome major AI answer-engine crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://verdant-nougat-081ddd.netlify.app/sitemap.xml

@@ -1,0 +1,28 @@
+# ShortcutPlus
+
+> A fast window switcher for Windows that replaces the built-in Alt+Tab. Search as you type, grouped by owning process, fully keyboard-driven, with live thumbnail previews. Summon it anywhere with Alt+4. Free for Windows 10 and 11.
+
+## Pages
+- [Home (中文)](https://verdant-nougat-081ddd.netlify.app/): Chinese landing page
+- [Home (English)](https://verdant-nougat-081ddd.netlify.app/en/): English landing page
+
+## Key facts
+- Product: ShortcutPlus — a desktop replacement for the Windows Alt+Tab task switcher
+- Platform: Windows 10 and Windows 11 only
+- Price: Free
+- Global hotkey to summon: Alt + 4
+- Keyboard model: type to filter, Up/Down to move across groups, Enter to switch, Esc to close
+
+## Features
+- Search-as-you-type filtering of window titles and process names
+- Automatic grouping of windows by their owning process
+- Keyboard-first navigation; no mouse required
+- Live thumbnail preview of the selected window (via Electron desktopCapturer, matched by window handle)
+- Synchronous, zero-lag window enumeration
+
+## Technology
+- Built with Electron 19, Vue 3, TypeScript and Vite
+- Native Windows calls via koffi (a modern C FFI) — ships prebuilt binaries, no Python or Visual C++ toolchain required
+- Enumerates windows with the Win32 EnumWindows API, filtering DWM-cloaked and tool windows
+- Decodes GBK window titles on Chinese systems with iconv-lite
+- Frameless, transparent, always-on-top overlay window

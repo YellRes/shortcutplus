@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ShortcutPlus — 重新发明 Windows 的 Alt+Tab 窗口切换器</title>
+<meta name="description" content="ShortcutPlus 是替代 Windows 系统 Alt+Tab 的极速窗口切换器：即输即搜、按进程分组、纯键盘导航、实时缩略图预览。按 Alt+4 唤起，输入即定位，回车即切换。支持 Windows 10/11，免费。" />
+<meta name="theme-color" content="#07070c" />
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
+
+<!-- Canonical + bilingual alternates -->
+<link rel="canonical" href="https://verdant-nougat-081ddd.netlify.app/" />
+<link rel="alternate" hreflang="zh-Hans" href="https://verdant-nougat-081ddd.netlify.app/" />
+<link rel="alternate" hreflang="en" href="https://verdant-nougat-081ddd.netlify.app/en/" />
+<link rel="alternate" hreflang="x-default" href="https://verdant-nougat-081ddd.netlify.app/" />
+
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="ShortcutPlus" />
+<meta property="og:title" content="ShortcutPlus — 重新发明 Windows 的 Alt+Tab" />
+<meta property="og:description" content="替代 Windows 系统 Alt+Tab 的极速窗口切换器：即输即搜、按进程分组、纯键盘导航、实时缩略图预览。按 Alt+4 唤起。支持 Windows 10/11，免费。" />
+<meta property="og:url" content="https://verdant-nougat-081ddd.netlify.app/" />
+<meta property="og:image" content="https://verdant-nougat-081ddd.netlify.app/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="zh_CN" />
+<meta property="og:locale:alternate" content="en_US" />
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="ShortcutPlus — 重新发明 Windows 的 Alt+Tab" />
+<meta name="twitter:description" content="替代系统 Alt+Tab 的极速窗口切换器：即输即搜、按进程分组、纯键盘导航。按 Alt+4 唤起。Windows 10/11，免费。" />
+<meta name="twitter:image" content="https://verdant-nougat-081ddd.netlify.app/og-image.png" />
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2322d3ee'/%3E%3Cstop%20offset='.55'%20stop-color='%238b5cf6'/%3E%3Cstop%20offset='1'%20stop-color='%23f472b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='url(%23g)'/%3E%3Ctext%20x='16'%20y='23'%20font-family='Arial,Helvetica,sans-serif'%20font-size='18'%20font-weight='bold'%20fill='%230a0a12'%20text-anchor='middle'%3ES%2B%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/styles.css" />
+
+<!-- Structured data: helps Google rich results AND generative engines (GEO) extract facts -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ShortcutPlus",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "description": "替代 Windows 系统 Alt+Tab 的极速窗口切换器。枚举所有可切换窗口并按所属进程分组，支持即时搜索、纯键盘导航和实时缩略图预览。按 Alt+4 唤起。",
+  "url": "https://verdant-nougat-081ddd.netlify.app/",
+  "image": "https://verdant-nougat-081ddd.netlify.app/og-image.png",
+  "inLanguage": "zh-CN",
+  "softwareVersion": "1.0",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": [
+    "即输即搜窗口筛选",
+    "按所属进程自动分组",
+    "纯键盘导航（↑↓ / 回车 / Esc）",
+    "实时缩略图预览",
+    "全局快捷键 Alt+4 唤起",
+    "同步枚举、零延迟"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "zh-CN",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "ShortcutPlus 是什么？",
+      "acceptedAnswer": { "@type": "Answer", "text": "ShortcutPlus 是一款 Windows 桌面应用，用来替代系统自带的 Alt+Tab 任务切换器。它枚举所有可切换的窗口，按所属进程分组，支持输入关键词即时筛选，并用键盘快速切换。" }
+    },
+    {
+      "@type": "Question",
+      "name": "如何唤起 ShortcutPlus？",
+      "acceptedAnswer": { "@type": "Answer", "text": "在任意界面按下 Alt + 4 即可唤起切换面板，面板会居中浮现并自动聚焦；失去焦点时自动隐藏。" }
+    },
+    {
+      "@type": "Question",
+      "name": "支持哪些操作系统？",
+      "acceptedAnswer": { "@type": "Answer", "text": "支持 Windows 10 和 Windows 11。这是一款仅限 Windows 的应用。" }
+    },
+    {
+      "@type": "Question",
+      "name": "ShortcutPlus 收费吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "免费。" }
+    },
+    {
+      "@type": "Question",
+      "name": "它和系统自带的 Alt+Tab 有什么区别？",
+      "acceptedAnswer": { "@type": "Answer", "text": "系统 Alt+Tab 在窗口很多时只是一长排缩略图，无法搜索、不分组；ShortcutPlus 提供 Spotlight 式命令面板，可即时搜索、按进程分组、纯键盘导航，并实时预览选中窗口的缩略图。" }
+    },
+    {
+      "@type": "Question",
+      "name": "使用 ShortcutPlus 需要安装额外的运行时或编译环境吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "不需要。原生 Windows 调用通过 koffi 完成并附带预编译二进制，安装时无需 Python 或 Visual C++ 工具链。" }
+    }
+  ]
+}
+</script>
+<noscript>
+  <!-- JS disabled: scroll-reveal can't run, so show all content immediately -->
+  <style>.reveal { opacity: 1 !important; transform: none !important; }</style>
+</noscript>
+</head>
+<body class="lang-zh">
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="ShortcutPlus 首页">
+      <span class="mark">S+</span>
+      <span>ShortcutPlus</span>
+    </a>
+    <div class="nav-links">
+      <a href="#features">功能</a>
+      <a href="#keyboard">快捷键</a>
+      <a href="#tech">技术</a>
+      <a href="#faq">常见问题</a>
+    </div>
+    <div class="nav-cta">
+      <a class="lang-toggle" href="en/" hreflang="en" aria-label="Switch to English"><b class="z">中</b><span style="color:var(--faint)">/</span><b class="e">EN</b></a>
+      <a href="https://github.com/YellRes/shortcutplus/releases/tag/v0.0.1" target="_blank" rel="noopener" class="btn btn-primary" style="padding:9px 18px;font-size:14px;">免费下载</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="badge"><span class="dot"></span>Windows 10 / 11 · 原生极速</span>
+      <h1>重新发明 Windows 的 <span class="grad-text">Alt + Tab</span></h1>
+      <div class="hero-sub-en">Reinvent your task switcher.</div>
+      <p class="hero-desc">
+        即输即搜、按进程智能分组、纯键盘操控的窗口切换器。告别一长串挤在一起的缩略图——
+        按 <span class="kbd">Alt</span> + <span class="kbd">4</span> 唤起，输入即定位，回车即切换。
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/YellRes/shortcutplus/releases/tag/v0.0.1" target="_blank" rel="noopener" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+          下载 for Windows
+        </a>
+        <a href="#features" class="btn btn-ghost">了解功能</a>
+      </div>
+      <div class="hero-hint">
+        <span>全局唤起</span>
+        <span class="kbd">Alt</span><span style="color:var(--faint)">+</span><span class="kbd">4</span>
+        <span style="color:var(--border-strong)">·</span>
+        <span>无需鼠标 · Keyboard-first</span>
+      </div>
+    </div>
+
+    <!-- switcher mock -->
+    <div class="reveal switcher" id="switcher" aria-hidden="true">
+      <div class="sw-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+        <span class="q" id="sw-query">code</span>
+        <span class="caret"></span>
+      </div>
+      <div class="sw-body">
+        <div class="sw-list" id="sw-list"><!-- injected by JS --></div>
+        <div class="sw-preview">
+          <div class="sw-thumb">
+            <div class="win-bar"><i style="background:#f472b6"></i><i style="background:#fbbf24"></i><i style="background:#34d399"></i></div>
+            <span id="sw-preview-label">实时缩略图预览</span>
+          </div>
+          <div class="sw-meta"><span id="sw-proc">Code.exe</span><span><b>↵</b> 切换</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== PAIN / COMPARE ===== -->
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Why ShortcutPlus</div>
+      <h2>系统自带的 Alt+Tab，<br />在窗口多了之后就不够用了</h2>
+      <div class="en">The native switcher breaks down when you have dozens of windows open.</div>
+    </div>
+    <div class="compare">
+      <div class="col bad reveal">
+        <h3>原生 Alt + Tab</h3>
+        <div class="en">Windows default</div>
+        <ul>
+          <li><span class="ic">✕</span><span>窗口一多就是一长排缩略图，靠数缩略图找目标</span></li>
+          <li><span class="ic">✕</span><span>不能搜索，找不到只能反复 Tab</span></li>
+          <li><span class="ic">✕</span><span>同一程序的多个窗口混杂，没有分组</span></li>
+          <li><span class="ic">✕</span><span>必须按住 Alt，松手就消失</span></li>
+        </ul>
+      </div>
+      <div class="vs"><span>VS</span></div>
+      <div class="col good reveal">
+        <h3>ShortcutPlus</h3>
+        <div class="en">Command-palette switcher</div>
+        <ul>
+          <li><span class="ic">✓</span><span>Spotlight 式命令面板，输入关键词即时筛选</span></li>
+          <li><span class="ic">✓</span><span>按所属进程自动分组，结构一目了然</span></li>
+          <li><span class="ic">✓</span><span>↑↓ 跨组导航、回车切换、Esc 关闭，纯键盘</span></li>
+          <li><span class="ic">✓</span><span>选中窗口实时缩略图预览，确认无误再切</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="block" id="features">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Features</div>
+      <h2>为「快」而生的每一个细节</h2>
+      <div class="en">Built for speed, from enumeration to keystroke.</div>
+    </div>
+    <div class="features">
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg></div>
+        <h3>即输即搜</h3>
+        <div class="en">Type to filter</div>
+        <p>打开面板直接输入，窗口标题与程序名实时匹配，目标一键命中，不再靠肉眼数缩略图。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <h3>按进程智能分组</h3>
+        <div class="en">Grouped by process</div>
+        <p>同一程序的所有窗口自动归到一组，浏览器、IDE、聊天工具各就各位，结构清晰。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M7 14h10"/></svg></div>
+        <h3>纯键盘导航</h3>
+        <div class="en">Keyboard-first</div>
+        <p><span class="kbd">↑</span><span class="kbd">↓</span> 跨组移动、<span class="kbd">↵</span> 切换、<span class="kbd">Esc</span> 关闭。扁平导航顺序与视觉分组解耦，手不离键盘。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 21h8"/></svg></div>
+        <h3>实时缩略图预览</h3>
+        <div class="en">Live thumbnails</div>
+        <p>选中窗口右侧即时呈现画面预览（基于 desktopCapturer 按窗口句柄匹配），切换前心里有数。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><path d="M13 2L4.5 12.5h6L9 22l8.5-10.5h-6L13 2z"/></svg></div>
+        <h3>全局快捷键唤起</h3>
+        <div class="en">Global hotkey</div>
+        <p>任意场景按 <span class="kbd">Alt</span>+<span class="kbd">4</span> 立即唤起，居中浮现、自动聚焦；失焦自动隐藏，不打扰。</p>
+      </div>
+      <div class="card reveal">
+        <span class="glow"></span>
+        <div class="ic-box"><svg viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20z"/><path d="M12 6v6l4 2"/></svg></div>
+        <h3>零延迟枚举</h3>
+        <div class="en">Zero-lag</div>
+        <p>同步枚举所有窗口、无异步竞态；原生 FFI 直连 Win32 API，唤起即就绪，没有转圈等待。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== KEYBOARD MODEL ===== -->
+<section class="block" id="keyboard">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Keyboard Model</div>
+      <h2>四个按键，掌握全部操作</h2>
+      <div class="en">Four keys. That's the whole thing.</div>
+    </div>
+    <div class="keymodel">
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd">Alt</span><span style="color:var(--faint)">+</span><span class="kbd">4</span></div>
+        <h4>唤起</h4>
+        <div class="en">Summon</div>
+        <p>面板居中浮现并聚焦</p>
+      </div>
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd" style="min-width:auto">Aa</span></div>
+        <h4>输入筛选</h4>
+        <div class="en">Type to filter</div>
+        <p>实时匹配标题与程序名</p>
+      </div>
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd">↑</span><span class="kbd">↓</span></div>
+        <h4>跨组移动</h4>
+        <div class="en">Navigate</div>
+        <p>扁平列表流畅穿梭各分组</p>
+      </div>
+      <div class="keystep reveal">
+        <div class="keys"><span class="kbd">↵</span><span style="color:var(--faint)">/</span><span class="kbd">Esc</span></div>
+        <h4>切换 / 关闭</h4>
+        <div class="en">Switch / Dismiss</div>
+        <p>回车切到目标，Esc 隐藏</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TECH ===== -->
+<section class="block" id="tech">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">Under the Hood</div>
+      <h2>工程师能欣赏的实现</h2>
+      <div class="en">The engineering behind the speed.</div>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-item reveal">
+        <span class="num">01</span>
+        <div>
+          <h4>原生 FFI 直连 Win32</h4>
+          <p>通过 <code>koffi</code> 现代 C FFI 直接调用 user32 / dwmapi 等系统 DLL，N-API 跨 Electron 版本 ABI 稳定，无需编译工具链。</p>
+        </div>
+      </div>
+      <div class="tech-item reveal">
+        <span class="num">02</span>
+        <div>
+          <h4>同步枚举，无竞态</h4>
+          <p><code>EnumWindows</code> 配合注册回调同步构建窗口列表，过滤 DWM 隐藏窗口、工具窗口，解析末级弹窗祖先链——一次拿到真实 Alt+Tab 窗口。</p>
+        </div>
+      </div>
+      <div class="tech-item reveal">
+        <span class="num">03</span>
+        <div>
+          <h4>中文标题精准解码</h4>
+          <p>Win32 <code>*A</code> 接口在中文系统返回 GBK，读取原始字节后用 <code>iconv-lite</code> 解码，标题与进程名永不乱码。</p>
+        </div>
+      </div>
+      <div class="tech-item reveal">
+        <span class="num">04</span>
+        <div>
+          <h4>轻量现代技术栈</h4>
+          <p><code>Electron 19</code> + <code>Vue 3</code> + <code>TypeScript</code> + <code>Vite</code>。无边框透明置顶覆盖层，进程图标按 exe 路径缓存，并行拉取互不阻塞。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="block" id="faq">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div class="sec-tag">FAQ</div>
+      <h2>常见问题</h2>
+      <div class="en">Frequently asked questions.</div>
+    </div>
+    <div class="faq reveal">
+      <details>
+        <summary>ShortcutPlus 是什么？</summary>
+        <div class="answer">ShortcutPlus 是一款 Windows 桌面应用，用来替代系统自带的 Alt+Tab 任务切换器。它枚举所有可切换的窗口，按所属进程分组，支持输入关键词即时筛选，并用键盘快速切换。</div>
+      </details>
+      <details>
+        <summary>如何唤起 ShortcutPlus？</summary>
+        <div class="answer">在任意界面按下 <code>Alt + 4</code> 即可唤起切换面板，面板会居中浮现并自动聚焦；失去焦点时自动隐藏。</div>
+      </details>
+      <details>
+        <summary>支持哪些操作系统？</summary>
+        <div class="answer">支持 Windows 10 和 Windows 11。这是一款仅限 Windows 的应用。</div>
+      </details>
+      <details>
+        <summary>ShortcutPlus 收费吗？</summary>
+        <div class="answer">免费。</div>
+      </details>
+      <details>
+        <summary>它和系统自带的 Alt+Tab 有什么区别？</summary>
+        <div class="answer">系统 Alt+Tab 在窗口很多时只是一长排缩略图，无法搜索、不分组；ShortcutPlus 提供 Spotlight 式命令面板，可即时搜索、按进程分组、纯键盘导航，并实时预览选中窗口的缩略图。</div>
+      </details>
+      <details>
+        <summary>使用 ShortcutPlus 需要安装额外的运行时或编译环境吗？</summary>
+        <div class="answer">不需要。原生 Windows 调用通过 <code>koffi</code> 完成并附带预编译二进制，安装时无需 Python 或 Visual C++ 工具链。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="block" id="download">
+  <div class="wrap">
+    <div class="final reveal">
+      <h2>让切换窗口，<span class="grad-text">快到无感</span></h2>
+      <div class="en">Switching windows should feel instant.</div>
+      <div class="hero-actions">
+        <a href="https://github.com/YellRes/shortcutplus/releases/tag/v0.0.1" target="_blank" rel="noopener" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+          免费下载 ShortcutPlus
+        </a>
+        <a href="#features" class="btn btn-ghost">查看全部功能</a>
+      </div>
+      <div class="meta">支持 Windows 10 / 11 · 免费 · 唤起快捷键 Alt + 4</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="wrap">
+    <div class="logo">
+      <span class="mark">S+</span>
+      <span>ShortcutPlus</span>
+    </div>
+    <div class="links">
+      <a href="#features">功能</a>
+      <a href="#keyboard">快捷键</a>
+      <a href="#tech">技术</a>
+      <a href="en/" hreflang="en">English</a>
+    </div>
+    <div class="muted">© 2026 ShortcutPlus · Windows-only</div>
+  </div>
+</footer>
+
+<script src="assets/app.js" defer></script>
+</body>
+</html>

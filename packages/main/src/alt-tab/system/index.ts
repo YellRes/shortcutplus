@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import { getAllInfo, toggleWindow } from './windows'
+import { getAllInfo, toggleWindow, closeWindow } from './windows'
 import type { WindowAltTabTaskItem } from '../type'
 import { browserWindow } from '../../index'
 
@@ -11,6 +11,10 @@ export const getAltTabTask = async () => {
 
 export const toggleThisWindows = (appHwnd: number) => {
   toggleWindow(appHwnd)
+}
+
+export const closeThisWindow = (appHwnd: number) => {
+  closeWindow(appHwnd)
 }
 
 // 进程图标缓存：同一 exe 路径的图标基本不变，跨轮次复用，避免重复 getFileIcon
