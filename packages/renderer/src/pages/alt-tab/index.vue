@@ -12,11 +12,27 @@
   const searchRef = ref<HTMLInputElement>()
   const listRef = ref<HTMLElement>()
 
-  // 过滤（关键字与标题都转小写，避免大写匹配不到）
+  // ── 本地别名：按窗口 hwnd 存，只在 AltSwitch 显示，不改真实标题 ──
+  // 存 localStorage；窗口活着期间有效，目标程序重启换 hwnd 后自然失效。
+  const ALIAS_KEY = 'altswitch_window_aliases'
+  const loadAliases = (): Record<string, string> => {
+    try {
+      return JSON.parse(localStorage.getItem(ALIAS_KEY) || '{}')
+    } catch {
+      return {}
+    }
+  }
+  const aliases = ref<Record<string, string>>(loadAliases())
+  const saveAliases = () => localStorage.setItem(ALIAS_KEY, JSON.stringify(aliases.value))
+  // 列表/预览/搜索统一用这个：有别名显示别名，否则显示真实标题
+  const displayName = (item: WindowAltTabTaskItem) =>
+    aliases.value[String(item.appHwnd)] || item.appTitle
+
+  // 过滤（按显示名匹配，别名也能被搜到；大小写归一）
   const filtered = computed(() => {
     const kw = inputVal.value.trim().toLowerCase()
     return kw
-      ? allTabsArr.value.filter((t) => t.appTitle.toLowerCase().includes(kw))
+      ? allTabsArr.value.filter((t) => displayName(t).toLowerCase().includes(kw))
       : allTabsArr.value
   })
 
@@ -123,8 +139,58 @@
     setTimeout(getAllTabs, 300)
   }
 
+  // ── 右键菜单 + 重命名 ──
+  const menu = ref<{ x: number; y: number; item: WindowAltTabTaskItem } | null>(null)
+  const openMenu = (e: MouseEvent, item: WindowAltTabTaskItem) => {
+    e.preventDefault()
+    selectedIndex.value = indexOfItem(item)
+    menu.value = { x: e.clientX, y: e.clientY, item }
+  }
+  const closeMenu = () => {
+    menu.value = null
+  }
+
+  const editingHwnd = ref<number | null>(null)
+  const editValue = ref('')
+  const startRename = (item: WindowAltTabTaskItem) => {
+    editingHwnd.value = item.appHwnd
+    editValue.value = displayName(item)
+    closeMenu()
+    nextTick(() => {
+      const el = listRef.value?.querySelector('.rename-input') as HTMLInputElement | null
+      el?.focus()
+      el?.select()
+    })
+  }
+  const commitRename = () => {
+    if (editingHwnd.value === null) return
+    const key = String(editingHwnd.value)
+    const v = editValue.value.trim()
+    if (v) aliases.value[key] = v
+    else delete aliases.value[key] // 清空 → 恢复真实标题
+    saveAliases()
+    editingHwnd.value = null
+  }
+  const cancelRename = () => {
+    editingHwnd.value = null
+  }
+  const clearAlias = (item: WindowAltTabTaskItem) => {
+    delete aliases.value[String(item.appHwnd)]
+    saveAliases()
+    closeMenu()
+  }
+
   // 键盘模型：↑↓ 选择 · ↵ 切换 · Esc 关闭（输入框常驻聚焦，方向键需阻止默认行为）
   const onKeydown = (e: KeyboardEvent) => {
+    if (editingHwnd.value !== null) return // 重命名中：交给输入框自己处理
+    if (menu.value) {
+      // 菜单打开时 Esc 只关菜单，不隐藏窗口
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        closeMenu()
+      }
+      return
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       move(1)
@@ -196,6 +262,7 @@
               "
               @mouseenter="selectedIndex = indexOfItem(item)"
               @click="switchTo(item)"
+              @contextmenu="openMenu($event, item)"
             >
               <img
                 v-if="item.appIcon"
@@ -204,7 +271,17 @@
                 alt=""
               />
               <span v-else class="h-5 w-5 flex-shrink-0 rounded-[4px] bg-white/10" />
-              <span class="truncate">{{ item.appTitle }}</span>
+              <!-- 重命名中：内联输入框；否则显示名（别名或真实标题） -->
+              <input
+                v-if="editingHwnd === item.appHwnd"
+                v-model="editValue"
+                class="rename-input min-w-0 flex-1 rounded bg-white/10 px-1.5 py-0.5 text-sm text-white outline-none ring-1 ring-blue-400"
+                @click.stop
+                @keydown.enter.stop.prevent="commitRename"
+                @keydown.esc.stop.prevent="cancelRename"
+                @blur="commitRename"
+              />
+              <span v-else class="truncate">{{ displayName(item) }}</span>
 
               <!-- 关闭目标窗口；@click.stop 防止冒泡触发上面的切换 -->
               <button
@@ -236,7 +313,7 @@
           <span v-else class="text-xs text-zinc-600">无预览</span>
         </div>
         <div v-if="selected" class="w-full text-center">
-          <div class="truncate text-sm text-zinc-200">{{ selected.appTitle }}</div>
+          <div class="truncate text-sm text-zinc-200">{{ displayName(selected) }}</div>
           <div class="mt-1 font-mono text-[11px] text-zinc-500">{{ exeName(selected.processName) }}</div>
         </div>
       </div>
@@ -248,6 +325,30 @@
       <span class="flex items-center gap-1.5"><kbd>↵</kbd> 切换</span>
       <span class="flex items-center gap-1.5"><kbd>Esc</kbd> 关闭</span>
     </div>
+
+    <!-- 右键菜单（重命名 / 清除别名）；右键列表项时在光标处弹出 -->
+    <template v-if="menu">
+      <!-- 全屏透明遮罩：点击或再次右键即关闭菜单 -->
+      <div class="fixed inset-0 z-40" @click="closeMenu" @contextmenu.prevent="closeMenu" />
+      <div
+        class="fixed z-50 min-w-[128px] overflow-hidden rounded-lg border border-white/10 bg-zinc-800 py-1 text-sm text-zinc-200 shadow-xl"
+        :style="{ left: menu.x + 'px', top: menu.y + 'px' }"
+      >
+        <button
+          class="block w-full px-3 py-1.5 text-left hover:bg-white/10"
+          @click="startRename(menu.item)"
+        >
+          重命名
+        </button>
+        <button
+          v-if="aliases[String(menu.item.appHwnd)]"
+          class="block w-full px-3 py-1.5 text-left text-zinc-400 hover:bg-white/10"
+          @click="clearAlias(menu.item)"
+        >
+          清除别名
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
