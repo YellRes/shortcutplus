@@ -4,6 +4,10 @@ const routes = [
   {
     path: '/',
     component: () => import('../pages/alt-tab/index.vue')
+  },
+  {
+    path: '/settings',
+    component: () => import('../pages/settings/index.vue')
   }
 ]
 

@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld('api', {
   // 统一为 invoke/handle，与主进程 handler 协议一致（之前用 send 拿不到返回值）
   getAppThumbnail: (hwnd: number): Promise<string> => ipcRenderer.invoke('get-app-thumbnail', hwnd),
   hideMainApp: () => ipcRenderer.send('hide-main-app'),
+  // 设置读写（详见主进程 settings.ts / IPC）
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  saveSettings: (patch: { hotkey?: string; autoLaunch?: boolean }) =>
+    ipcRenderer.invoke('save-settings', patch),
   // 窗口被唤起(show)时主进程会推送 refresh-tasks，渲染层据此刷新列表（替代 30s 轮询）
   onRefresh: (cb: () => void) => {
     const listener = () => cb()

@@ -1,6 +1,14 @@
-import { ipcMain, globalShortcut, desktopCapturer, type DesktopCapturerSource } from 'electron'
-import { browserWindow } from '../index'
+import {
+  app,
+  ipcMain,
+  globalShortcut,
+  desktopCapturer,
+  screen,
+  type DesktopCapturerSource
+} from 'electron'
+import { browserWindow, openSettingsWindow } from '../index'
 import { getAltTabTask, toggleThisWindows, getSelfHwnd, closeThisWindow } from './system'
+import { getSettings, saveSettings } from '../settings'
 
 /**
  * app 和 windows 是什么关系
@@ -83,6 +91,26 @@ export const initIPC = () => {
   ipcMain.on('hide-main-app', () => {
     browserWindow.hide()
   })
+
+  // 设置：读取
+  ipcMain.handle('get-settings', () => getSettings())
+
+  // 设置：保存并立即生效。快捷键先验证再持久化——注册失败则保留原快捷键。
+  ipcMain.handle('save-settings', (_event, patch: { hotkey?: string; autoLaunch?: boolean }) => {
+    const current = getSettings()
+    let hotkey = current.hotkey
+    let hotkeyOk = true
+    if (patch.hotkey && patch.hotkey !== current.hotkey) {
+      hotkeyOk = applyHotkey(patch.hotkey)
+      if (hotkeyOk) hotkey = patch.hotkey // 仅在有效时采用
+    }
+    const settings = saveSettings({ ...patch, hotkey })
+    applyAutoLaunch(settings.autoLaunch)
+    return { settings, hotkeyOk }
+  })
+
+  // 打开设置窗口（托盘菜单触发）
+  ipcMain.on('open-settings', () => openSettingsWindow())
 }
 
 /**
@@ -92,26 +120,61 @@ export const initIPC = () => {
  * 做法：show() 前把不透明度设为 0，让那一帧发生在不可见状态，下一帧再恢复，
  * 从而遮掉闪烁。仅在窗口此前不可见时才做这套遮帧，避免已可见时（如托盘“显示”）反而闪一下。
  */
+// 把窗口放到「鼠标所在的那块屏」并在其工作区内居中；窗口超出工作区时收缩适配。
+// 修复多显示器/拔插转接头切屏后窗口仍按旧屏坐标摆放、跑到屏外或被高 DPI 小屏裁切的问题。
+const placeOnActiveDisplay = () => {
+  const cursor = screen.getCursorScreenPoint()
+  const { workArea } = screen.getDisplayNearestPoint(cursor)
+  const margin = 24
+  const winW = Math.min(760, workArea.width - margin)
+  const winH = Math.min(520, workArea.height - margin)
+  const x = Math.round(workArea.x + (workArea.width - winW) / 2)
+  const y = Math.round(workArea.y + (workArea.height - winH) / 2)
+  browserWindow.setBounds({ x, y, width: winW, height: winH })
+}
+
 export const showMainWindow = () => {
   const wasVisible = browserWindow.isVisible()
   if (!wasVisible) browserWindow.setOpacity(0)
-  browserWindow.center()
+  placeOnActiveDisplay()
   browserWindow.show()
   browserWindow.focus()
   if (!wasVisible) setTimeout(() => browserWindow.setOpacity(1), 32)
 }
 
+// 唤起/隐藏切换
+const togglePalette = () => {
+  if (browserWindow.isVisible()) browserWindow.hide()
+  else showMainWindow()
+}
+
+// 注册全局快捷键；失败（无效或被占用）时回退到上一个可用快捷键，返回是否成功
+let currentHotkey = ''
+export const applyHotkey = (hotkey: string): boolean => {
+  try {
+    globalShortcut.unregisterAll()
+    if (globalShortcut.register(hotkey, togglePalette)) {
+      currentHotkey = hotkey
+      return true
+    }
+  } catch {
+    // 无效 accelerator 会抛错，落到下面回退
+  }
+  globalShortcut.register(currentHotkey || 'Alt+4', togglePalette)
+  return false
+}
+
+export const applyAutoLaunch = (enabled: boolean) => {
+  app.setLoginItemSettings({ openAtLogin: enabled })
+}
+
 /**
- * 初始化 项目中快捷键：Alt+4 切换显示/隐藏
+ * 初始化全局快捷键与开机自启（都从持久化设置读取）
  */
 export const initShortCut = () => {
-  globalShortcut.register('Alt+4', () => {
-    if (browserWindow.isVisible()) {
-      browserWindow.hide()
-    } else {
-      showMainWindow()
-    }
-  })
+  const s = getSettings()
+  applyHotkey(s.hotkey)
+  applyAutoLaunch(s.autoLaunch)
 }
 
 export const unRegisterShortCut = () => {
@@ -128,4 +191,12 @@ export const initAppEvent = () => {
   browserWindow.on('show', () => {
     browserWindow.webContents.send('refresh-tasks')
   })
+
+  // 显示器拓扑变化（拔插转接头 / 改分辨率 / 改缩放）时，若窗口可见则重新摆到当前屏，避免落在屏外
+  const reposition = () => {
+    if (browserWindow.isVisible()) placeOnActiveDisplay()
+  }
+  screen.on('display-removed', reposition)
+  screen.on('display-added', reposition)
+  screen.on('display-metrics-changed', reposition)
 }

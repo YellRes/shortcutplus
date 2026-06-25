@@ -14,6 +14,44 @@ if (!isSingleInstance) {
 }
 
 let browserWindow: BrowserWindow
+let settingsWindow: BrowserWindow | null = null
+
+// 渲染层基础 URL（dev 用 vite 服务，prod 用打包后的 index.html）
+const rendererBaseUrl = () =>
+  import.meta.env.DEV
+    ? 'http://localhost:3030'
+    : new URL('../dist/renderer/index.html', `file://${__dirname}`).toString()
+
+/**
+ * 设置窗口：一个普通的有边框窗口（非透明/非置顶/不随失焦隐藏），
+ * 通过 hash 路由 #/settings 复用同一套渲染层。单实例，已开则聚焦。
+ */
+export function openSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.show()
+    settingsWindow.focus()
+    return
+  }
+  settingsWindow = new BrowserWindow({
+    width: 460,
+    height: 380,
+    resizable: false,
+    maximizable: false,
+    title: 'AltSwitch 设置',
+    icon: appIconPath,
+    backgroundColor: '#18181b',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      preload: join(__dirname, '../preload/index.cjs')
+    }
+  })
+  settingsWindow.setMenuBarVisibility(false)
+  settingsWindow.loadURL(rendererBaseUrl() + '#/settings')
+  settingsWindow.on('closed', () => {
+    settingsWindow = null
+  })
+}
 
 async function createWindow() {
   browserWindow = new BrowserWindow({
@@ -51,12 +89,7 @@ async function createWindow() {
     browserWindow?.show()
   })
 
-  // Define the URL to use for the `BrowserWindow`, depending on the DEV env.
-  const pageUrl = import.meta.env.DEV
-    ? 'http://localhost:3030'
-    : new URL('../dist/renderer/index.html', `file://${__dirname}`).toString()
-
-  await browserWindow.loadURL(pageUrl)
+  await browserWindow.loadURL(rendererBaseUrl())
 
   return browserWindow
 }

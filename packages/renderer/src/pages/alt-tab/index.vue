@@ -2,6 +2,7 @@
   import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
   import { WindowAltTabTaskItem } from 'main/src/alt-tab/type'
   import { SearchOutlined, CloseOutlined } from '@ant-design/icons-vue'
+  import { pinyin } from 'pinyin-pro'
 
   const inputVal = ref<string>('')
   const allTabsArr = ref<WindowAltTabTaskItem[]>([])
@@ -28,13 +29,30 @@
   const displayName = (item: WindowAltTabTaskItem) =>
     aliases.value[String(item.appHwnd)] || item.appTitle
 
-  // 过滤（按显示名匹配，别名也能被搜到；大小写归一）
-  const filtered = computed(() => {
-    const kw = inputVal.value.trim().toLowerCase()
-    return kw
-      ? allTabsArr.value.filter((t) => displayName(t).toLowerCase().includes(kw))
-      : allTabsArr.value
-  })
+  // 子序列模糊匹配：query 的字符按顺序出现在 target 中即命中（如 vsc → Visual Studio Code）
+  const isSubsequence = (q: string, t: string) => {
+    let i = 0
+    for (let j = 0; j < t.length && i < q.length; j++) {
+      if (t[j] === q[i]) i++
+    }
+    return i === q.length
+  }
+  // 标题转拼音首字母串：中文取首字母，非中文原样保留（如 "微信2.0" → "wx2.0"）
+  const toInitials = (s: string) =>
+    pinyin(s, { pattern: 'first', toneType: 'none', nonZh: 'consecutive' }).toLowerCase()
+
+  // 匹配：显示名（子串或子序列）或 其拼音首字母（子串或子序列）任一命中
+  const matches = (rawQuery: string, item: WindowAltTabTaskItem) => {
+    const q = rawQuery.trim().toLowerCase()
+    if (!q) return true
+    const name = displayName(item).toLowerCase()
+    if (name.includes(q) || isSubsequence(q, name)) return true
+    const initials = toInitials(displayName(item))
+    return initials.includes(q) || isSubsequence(q, initials)
+  }
+
+  // 过滤（模糊 + 拼音首字母；别名也能被搜到）
+  const filtered = computed(() => allTabsArr.value.filter((t) => matches(inputVal.value, t)))
 
   // 按进程分组用于展示
   const grouped = computed<Record<string, WindowAltTabTaskItem[]>>(() => {
@@ -53,10 +71,19 @@
   const exeName = (p: string) => p.split('\\').pop()?.replace(/\.exe$/i, '') || p
   const indexOfItem = (item: WindowAltTabTaskItem) => flatList.value.indexOf(item)
 
+  // MRU 默认选中：getAllAltTabTask 返回的是 Z 序（[0]=当前窗口，[1]=上一个窗口）。
+  // 默认选中「上一个窗口」，于是 Alt+4 → 回车 就能像系统 Alt+Tab 一样快速回切。
+  const selectDefault = () => {
+    const prev = allTabsArr.value[1] ?? allTabsArr.value[0]
+    const idx = prev ? flatList.value.indexOf(prev) : -1
+    selectedIndex.value = idx >= 0 ? idx : 0
+  }
+
   const getAllTabs = async () => {
     loading.value = true
     try {
       allTabsArr.value = await window.api.getAllAltTabTask()
+      selectDefault()
     } catch (e) {
       console.error(e)
     } finally {
@@ -191,6 +218,13 @@
       }
       return
     }
+    // Ctrl + 1~9 直达第 N 个窗口（用 Ctrl 修饰，避免与在搜索框输入数字、以及 Alt+4 冲突）
+    if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+      e.preventDefault()
+      const item = flatList.value[Number(e.key) - 1]
+      if (item) switchTo(item)
+      return
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       move(1)
@@ -211,7 +245,7 @@
 
 <template>
   <div
-    class="palette-enter flex h-[480px] w-[720px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/95 text-zinc-100 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+    class="palette-enter flex h-[480px] max-h-[100vh] w-[720px] max-w-[100vw] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/95 text-zinc-100 shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
   >
     <!-- 搜索 -->
     <div class="flex h-14 items-center gap-3 border-b border-white/10 px-4">
@@ -283,15 +317,24 @@
               />
               <span v-else class="truncate">{{ displayName(item) }}</span>
 
-              <!-- 关闭目标窗口；@click.stop 防止冒泡触发上面的切换 -->
-              <button
-                class="ml-auto flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-zinc-400 opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100"
-                :class="{ 'opacity-100': indexOfItem(item) === selectedIndex }"
-                title="关闭该窗口"
-                @click.stop="closeWindow(item)"
-              >
-                <close-outlined />
-              </button>
+              <!-- 右侧控件：序号(前9项, Ctrl+N 直达) + 关闭按钮 -->
+              <div class="ml-auto flex flex-shrink-0 items-center gap-2">
+                <span
+                  v-if="indexOfItem(item) < 9"
+                  class="font-mono text-[10px] text-zinc-500"
+                  title="Ctrl + 数字 直达"
+                  >{{ indexOfItem(item) + 1 }}</span
+                >
+                <!-- 关闭目标窗口；@click.stop 防止冒泡触发上面的切换 -->
+                <button
+                  class="flex h-6 w-6 items-center justify-center rounded text-zinc-400 opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100"
+                  :class="{ 'opacity-100': indexOfItem(item) === selectedIndex }"
+                  title="关闭该窗口"
+                  @click.stop="closeWindow(item)"
+                >
+                  <close-outlined />
+                </button>
+              </div>
             </div>
           </template>
         </div>
@@ -323,6 +366,7 @@
     <div class="flex h-9 items-center gap-4 border-t border-white/10 px-4 text-[11px] text-zinc-500">
       <span class="flex items-center gap-1.5"><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
       <span class="flex items-center gap-1.5"><kbd>↵</kbd> 切换</span>
+      <span class="flex items-center gap-1.5"><kbd>Ctrl</kbd><kbd>1~9</kbd> 直达</span>
       <span class="flex items-center gap-1.5"><kbd>Esc</kbd> 关闭</span>
     </div>
 

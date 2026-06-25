@@ -21,4 +21,4 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://verdant-nougat-081ddd.netlify.app/sitemap.xml
+Sitemap: https://shortcutplus.netlify.app/sitemap.xml

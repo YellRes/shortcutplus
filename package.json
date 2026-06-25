@@ -22,7 +22,7 @@
     "build": "npm run build:renderer && npm run build:preload && npm run build:main",
     "start": "electron .",
     "dev": "cross-env NODE_ENV=development tsx scripts/dev-server.ts",
-    "dist": "pnpm run build && electron-builder",
+    "dist": "pnpm run build && electron-builder ",
     "dist:dir": "pnpm run build && electron-builder --dir"
   },
   "build": {
@@ -67,6 +67,7 @@
   "dependencies": {
     "@ant-design/icons-vue": "^6.1.0",
     "koffi": "^2.12.0",
+    "pinyin-pro": "^3.26.0",
     "vue": "^3.2.41",
     "vue-router": "^4.1.6"
   },

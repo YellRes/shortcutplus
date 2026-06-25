@@ -6,7 +6,7 @@
 [English](README.md) · [中文](README.zh-CN.md)
 
 <!-- TODO: 在 docs/screenshot.png 放一张截图或 GIF，会显示在这里 -->
-<p align="center"><img src="docs/screenshot.png" alt="AltSwitch 截图" width="720"></p>
+<!-- <p align="center"><img src="docs/screenshot.png" alt="AltSwitch 截图" width="720"></p> -->
 
 ## 特性
 
