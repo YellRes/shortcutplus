@@ -11,6 +11,9 @@ dependencies:
   koffi:
     specifier: ^2.12.0
     version: 2.16.2
+  pinyin-pro:
+    specifier: ^3.26.0
+    version: 3.28.1
   vue:
     specifier: ^3.2.41
     version: 3.5.35(typescript@4.9.5)
@@ -3720,6 +3723,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /pinyin-pro@3.28.1:
+    resolution: {integrity: sha512-oqz8ulwRgtUXRi0vbqEfGNly19zpyCxYrjhkk5TibGcgSW6eNwS5woajCXRwqURi8Ehc2yOFTiB4uNoZ+NJOnA==}
+    dev: false
 
   /pirates@4.0.7:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}

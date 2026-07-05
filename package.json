@@ -22,8 +22,8 @@
     "build": "npm run build:renderer && npm run build:preload && npm run build:main",
     "start": "electron .",
     "dev": "cross-env NODE_ENV=development tsx scripts/dev-server.ts",
-    "dist": "pnpm run build && electron-builder ",
-    "dist:dir": "pnpm run build && electron-builder --dir"
+    "dist": "pnpm run build && electron-builder --win",
+    "dist:dir": "pnpm run build && electron-builder --win --dir"
   },
   "build": {
     "appId": "com.altswitch.app",

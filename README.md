@@ -5,8 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [English](README.md) · [中文](README.zh-CN.md)
 
-<!-- TODO: add a screenshot or GIF at docs/screenshot.png; it will render here -->
-<p align="center"><img src="docs/screenshot.png" alt="AltSwitch screenshot" width="720"></p>
+<p align="center"><img src="docs/screenshot.webp" alt="AltSwitch screenshot" width="720"></p>
 
 ## Features
 
