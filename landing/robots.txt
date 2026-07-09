@@ -1,4 +1,4 @@
-# ShortcutPlus — allow all crawlers, including AI / generative engines (GEO)
+# AltSwitch — allow all crawlers, including AI / generative engines (GEO)
 User-agent: *
 Allow: /
 

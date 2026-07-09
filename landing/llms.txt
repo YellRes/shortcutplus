@@ -1,4 +1,4 @@
-# ShortcutPlus
+# AltSwitch
 
 > A fast window switcher for Windows that replaces the built-in Alt+Tab. Search as you type, grouped by owning process, fully keyboard-driven, with live thumbnail previews. Summon it anywhere with Alt+4. Free for Windows 10 and 11.
 
@@ -7,7 +7,7 @@
 - [Home (English)](https://shortcutplus.netlify.app/en/): English landing page
 
 ## Key facts
-- Product: ShortcutPlus — a desktop replacement for the Windows Alt+Tab task switcher
+- Product: AltSwitch — a desktop replacement for the Windows Alt+Tab task switcher
 - Platform: Windows 10 and Windows 11 only
 - Price: Free
 - Global hotkey to summon: Alt + 4

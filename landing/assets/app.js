@@ -5,7 +5,7 @@
 (function () {
   var groups = [
     { proc: "Code.exe", tag: "VS", color: "linear-gradient(135deg,#22d3ee,#3b82f6)", items: ["index.vue — shortcutplus", "windows.ts — alt-tab"] },
-    { proc: "Chrome.exe", tag: "Ch", color: "linear-gradient(135deg,#f472b6,#fb923c)", items: ["ShortcutPlus", "MDN — EnumWindows"] },
+    { proc: "Chrome.exe", tag: "Ch", color: "linear-gradient(135deg,#f472b6,#fb923c)", items: ["AltSwitch", "MDN — EnumWindows"] },
     { proc: "Terminal.exe", tag: ">_", color: "linear-gradient(135deg,#8b5cf6,#6366f1)", items: ["npm run dev"] }
   ];
 

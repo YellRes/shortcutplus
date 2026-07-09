@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title data-i18n="doc_title">ShortcutPlus — 重新发明 Windows 的 Alt+Tab</title>
+<title data-i18n="doc_title">AltSwitch — 重新发明 Windows 的 Alt+Tab</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%2322d3ee'/%3E%3Cstop%20offset='.55'%20stop-color='%238b5cf6'/%3E%3Cstop%20offset='1'%20stop-color='%23f472b6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='url(%23g)'/%3E%3Ctext%20x='16'%20y='23'%20font-family='Arial,Helvetica,sans-serif'%20font-size='18'%20font-weight='bold'%20fill='%230a0a12'%20text-anchor='middle'%3ES%2B%3C/text%3E%3C/svg%3E" />
 <style>
   :root {
@@ -416,7 +416,7 @@
   <div class="wrap">
     <div class="logo">
       <span class="mark">S+</span>
-      <span>ShortcutPlus</span>
+      <span>AltSwitch</span>
     </div>
     <div class="nav-links">
       <a href="#features" data-i18n="nav_features">功能</a>
@@ -481,7 +481,7 @@
 <section class="block">
   <div class="wrap">
     <div class="sec-head reveal">
-      <div class="sec-tag">Why ShortcutPlus</div>
+      <div class="sec-tag">Why AltSwitch</div>
       <h2 data-i18n="why_h2">系统自带的 Alt+Tab，<br />在窗口多了之后就不够用了</h2>
       <div class="en">The native switcher breaks down when you have dozens of windows open.</div>
     </div>
@@ -498,7 +498,7 @@
       </div>
       <div class="vs"><span>VS</span></div>
       <div class="col good reveal">
-        <h3>ShortcutPlus</h3>
+        <h3>AltSwitch</h3>
         <div class="en">Command-palette switcher</div>
         <ul>
           <li><span class="ic">✓</span><span data-i18n="cmp_good_1">Spotlight 式命令面板，输入关键词即时筛选</span></li>
@@ -653,7 +653,7 @@
       <div class="hero-actions">
         <a href="https://github.com/YellRes/shortcutplus/releases/tag/v0.0.1" target="_blank" rel="noopener" class="btn btn-primary">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-          <span data-i18n="final_btn_dl">免费下载 ShortcutPlus</span>
+          <span data-i18n="final_btn_dl">免费下载 AltSwitch</span>
         </a>
         <a href="#features" class="btn btn-ghost" data-i18n="final_btn_learn">查看全部功能</a>
       </div>
@@ -667,14 +667,14 @@
   <div class="wrap">
     <div class="logo">
       <span class="mark">S+</span>
-      <span>ShortcutPlus</span>
+      <span>AltSwitch</span>
     </div>
     <div class="links">
       <a href="#features" data-i18n="nav_features">功能</a>
       <a href="#keyboard" data-i18n="nav_shortcuts">快捷键</a>
       <a href="#tech" data-i18n="nav_tech">技术</a>
     </div>
-    <div class="muted">© 2026 ShortcutPlus · Windows-only</div>
+    <div class="muted">© 2026 AltSwitch · Windows-only</div>
   </div>
 </footer>
 
@@ -683,7 +683,7 @@
   (function () {
     var groups = [
       { proc: "Code.exe", tag: "VS", color: "linear-gradient(135deg,#22d3ee,#3b82f6)", items: ["index.vue — shortcutplus", "windows.ts — alt-tab"] },
-      { proc: "Chrome.exe", tag: "Ch", color: "linear-gradient(135deg,#f472b6,#fb923c)", items: ["ShortcutPlus 落地页", "MDN — EnumWindows"] },
+      { proc: "Chrome.exe", tag: "Ch", color: "linear-gradient(135deg,#f472b6,#fb923c)", items: ["AltSwitch 落地页", "MDN — EnumWindows"] },
       { proc: "Terminal.exe", tag: ">_", color: "linear-gradient(135deg,#8b5cf6,#6366f1)", items: ["npm run dev"] }
     ];
 
@@ -802,11 +802,11 @@
       tech4_p:        { zh: "<code>Electron 19</code> + <code>Vue 3</code> + <code>TypeScript</code> + <code>Vite</code>。无边框透明置顶覆盖层，进程图标按 exe 路径缓存，并行拉取互不阻塞。", en: "<code>Electron 19</code> + <code>Vue 3</code> + <code>TypeScript</code> + <code>Vite</code>. A frameless, transparent, always-on-top overlay; process icons cached by exe path and fetched in parallel." },
 
       final_h2:       { zh: '让切换窗口，<span class="grad-text">快到无感</span>', en: 'Make switching windows <span class="grad-text">feel instant</span>' },
-      final_btn_dl:   { zh: "免费下载 ShortcutPlus", en: "Download ShortcutPlus free" },
+      final_btn_dl:   { zh: "免费下载 AltSwitch", en: "Download AltSwitch free" },
       final_btn_learn:{ zh: "查看全部功能", en: "See all features" },
       final_meta:     { zh: "支持 Windows 10 / 11 · 免费 · 唤起快捷键 Alt + 4", en: "Windows 10 / 11 · Free · Summon with Alt + 4" },
 
-      doc_title:      { zh: "ShortcutPlus — 重新发明 Windows 的 Alt+Tab", en: "ShortcutPlus — Reinvent your Alt+Tab" }
+      doc_title:      { zh: "AltSwitch — 重新发明 Windows 的 Alt+Tab", en: "AltSwitch — Reinvent your Alt+Tab" }
     };
 
     function setLang(lang) {

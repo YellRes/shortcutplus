@@ -3,7 +3,7 @@
 > A fast, keyboard-first `Alt+Tab` replacement for Windows. A Spotlight-style window switcher that groups your open windows by app, lets you search them, and switches instantly.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[English](README.md) · [中文](README.zh-CN.md)
+[Website](https://shortcutplus.netlify.app/en/) · [English](README.md) · [中文](README.zh-CN.md)
 
 <p align="center"><img src="docs/screenshot.webp" alt="AltSwitch screenshot" width="720"></p>
 

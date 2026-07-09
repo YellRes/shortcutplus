@@ -3,7 +3,7 @@
 > 一个快速、键盘优先的 Windows `Alt+Tab` 替代品。类 Spotlight 的窗口切换器：按所属应用分组、可搜索、瞬间切换。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[English](README.md) · [中文](README.zh-CN.md)
+[官网](https://shortcutplus.netlify.app/) · [English](README.md) · [中文](README.zh-CN.md)
 
 <p align="center"><img src="docs/screenshot.webp" alt="AltSwitch 截图" width="720"></p>
 
